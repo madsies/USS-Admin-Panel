@@ -19,8 +19,7 @@ import com.google.gson.JsonParser;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class Main {
     private static final String APPLICATION_NAME = "Google Sheets API Java Quickstart";
@@ -32,10 +31,11 @@ public class Main {
      * If modifying these scopes, delete your previously saved tokens/ folder.
      */
     private static final List<String> SCOPES =
-            Collections.singletonList(SheetsScopes.SPREADSHEETS_READONLY);
+            Collections.singletonList(SheetsScopes.SPREADSHEETS);
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
     static String ADMIN_SHEET;
+    static Sheets service;
 
     /**
      * Creates an authorized Credential object.
@@ -81,11 +81,18 @@ public class Main {
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Main.getAdminSheet();
-        final String range = "A2:A5";
-        Sheets service =
-                new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
+
+        service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                         .setApplicationName(APPLICATION_NAME)
                         .build();
+
+        addTeam("meow");
+        sortTeams(true);
+    }
+
+    public static void listTeams()  throws IOException
+    {
+        final String range = "A2:A5";
         ValueRange response = service.spreadsheets().values()
                 .get(ADMIN_SHEET, range)
                 .execute();
@@ -99,6 +106,56 @@ public class Main {
             {
                 System.out.printf("%s\n", row.get(0));
             }
+        }
+    }
+
+    public static void addTeam(String name) throws IOException
+    {
+        List<List<Object>> value = Arrays.asList(Arrays.asList(name, 0, true, 0, 0));
+        String range = "A2:A1000";
+        ValueRange response = service.spreadsheets().values()
+                .get(ADMIN_SHEET, range)
+                .execute();
+        List<List<Object>> values = response.getValues();
+        if (values == null || values.isEmpty()) {
+            System.out.println("No data found.");
+        }
+        else
+        {
+            int placementOffset = values.size()+2; // Title and index offset
+            ValueRange body = new ValueRange().setValues(value);
+            range = "A"+placementOffset;
+            service.spreadsheets().values().update(ADMIN_SHEET, range, body)
+                    .setValueInputOption("USER_ENTERED")
+                    .execute();
+        }
+    }
+
+    public static void sortTeams(boolean seeding) throws IOException
+    {
+        String range = "A2:E1000";
+        ValueRange response = service.spreadsheets().values()
+                .get(ADMIN_SHEET, range)
+                .execute();
+        List<List<Object>> values = response.getValues();
+        if (values == null || values.isEmpty()) {
+            System.out.println("No data found.");
+        }
+        else
+        {
+            // Sort by seeding score
+            if (seeding)
+            {
+                values.sort(Comparator.comparingInt(o -> Integer.parseInt((String) o.get(1))));
+            }
+            else {
+
+            }
+            values = values.reversed();
+            ValueRange body = new ValueRange().setValues(values);
+            service.spreadsheets().values().update(ADMIN_SHEET, range, body)
+                    .setValueInputOption("USER_ENTERED")
+                    .execute();
         }
     }
 }
