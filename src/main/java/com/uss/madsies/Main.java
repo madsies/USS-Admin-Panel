@@ -86,8 +86,9 @@ public class Main {
                         .setApplicationName(APPLICATION_NAME)
                         .build();
 
-        addTeam("meow");
+        //addTeam("meow");
         sortTeams(true);
+        Matchmaker.createSwissMatchups(Objects.requireNonNull(getFullData()));
     }
 
     public static void listTeams()  throws IOException
@@ -129,6 +130,22 @@ public class Main {
                     .setValueInputOption("USER_ENTERED")
                     .execute();
         }
+    }
+
+    public static List<List<Object>> getFullData() throws IOException {
+        String range = "A2:E1000";
+        ValueRange response = service.spreadsheets().values()
+                .get(ADMIN_SHEET, range)
+                .execute();
+        List<List<Object>> values = response.getValues();
+        if (values == null || values.isEmpty()) {
+            System.out.println("No data found.");
+        }
+        else
+        {
+            return values;
+        }
+        return null;
     }
 
     public static void sortTeams(boolean seeding) throws IOException
