@@ -42,9 +42,30 @@ public class Main {
     static String PUBLIC_SHEET = "1HRoTkeSpNUK4u2ft08EimauMcTNlndrIYl-gLZUy-8E";
     static Sheets service;
     static List<TeamData> teamsInfo;
-    //public static boolean ROUND_IN_PROGRESS = false;
+    static String DIVISION = "ONE";
     static List<MatchUp> matches;
 
+
+    public static void changeDivision(String division)
+    {
+        if (division.equalsIgnoreCase("one"))
+        {
+            DIVISION = "ONE";
+        }
+        else if (division.equalsIgnoreCase("two"))
+        {
+            DIVISION = "TWO";
+        }
+        else if (division.equalsIgnoreCase("three"))
+        {
+            DIVISION = "THREE";
+        }
+        else
+        {
+            DIVISION = "ONE";
+        }
+
+    }
     /**
      * Creates an authorized Credential object.
      *
@@ -88,7 +109,7 @@ public class Main {
         SheetProperties sheetProperties = new SheetProperties();
         int num = getSheetNumber() + 1;
         setSheetNumber(num);
-        sheetProperties.setTitle("Match_"+num);
+        sheetProperties.setTitle(DIVISION+"_Match_"+num);
 
         // Wrap in an AddSheetRequest
         AddSheetRequest addSheetRequest = new AddSheetRequest();
@@ -134,7 +155,7 @@ public class Main {
 
     public static int getSheetNumber() throws IOException
     {
-        String range = "Z1";
+        String range = DIVISION+"_Datasheet!Z1";
         ValueRange response = service.spreadsheets().values()
                 .get(ADMIN_SHEET, range)
                 .execute();
@@ -150,7 +171,7 @@ public class Main {
     }
 
     public static void setSheetNumber(int val) throws IOException {
-        String range = "Z1";
+        String range = DIVISION+"_Datasheet!Z1";
         List<List<Object>> values = new ArrayList<>();
         values.add(List.of(val));
         ValueRange body = new ValueRange().setValues(values);
@@ -162,7 +183,7 @@ public class Main {
 
     public static void writeMatchupSheet(List<MatchUp> matches) throws IOException {
         int num = getSheetNumber();
-        String range = "Match_"+num+"!A1";
+        String range = DIVISION+"_Match_"+num+"!A1";
         List<List<Object>> values = new ArrayList<>();
 
         // Headers for sheet (Readability)
@@ -193,7 +214,7 @@ public class Main {
     public static void updateRecords() throws IOException
     {
         int num = getSheetNumber();
-        String range = "Match_"+num+"!A2:D";
+        String range = DIVISION+"_Match_"+num+"!A2:D";
 
         ValueRange response = service.spreadsheets().values()
                 .get(ADMIN_SHEET, range)
@@ -253,11 +274,13 @@ public class Main {
     }
 
     public static void genericSetup() throws IOException {
+        getFullData();
         sortTeams(true);
         rewriteData();
     }
 
-    public static void fixStandings() throws IOException {
+    public static void fixStandings() throws IOException
+    {
         sortTeams(false);
         rewriteData();
     }
@@ -275,7 +298,7 @@ public class Main {
     {
         matches.clear();
         int num = getSheetNumber();
-        deleteSheet("Match_"+num);
+        deleteSheet(DIVISION+"_Match_"+num);
         setSheetNumber(num-1);
     }
 
@@ -350,7 +373,7 @@ public class Main {
             int num = getSheetNumber();
             for (int i = num; i > 0; i--)
             {
-                deleteSheet("Match_"+i);
+                deleteSheet(DIVISION+"_Datasheet!Match_"+i);
             }
             setSheetNumber(0);
             rewriteData();
@@ -385,7 +408,7 @@ public class Main {
             sheetData.add(teamData.convertToSpreadsheetRow());
         }
         ValueRange body = new ValueRange().setValues(sheetData);
-        String range = "A2:ZZ1000";
+        String range = DIVISION+"_Datasheet!A2:ZZ1000";
         service.spreadsheets().values().update(ADMIN_SHEET, range, body)
                 .setValueInputOption("USER_ENTERED")
                 .execute();
@@ -402,7 +425,7 @@ public class Main {
     public static void copyMissingMatches() throws IOException {
         // Go through matches in current round, print names of teams of unfinished games
         int num = getSheetNumber();
-        String range = "Match_"+num+"!A2:D";
+        String range = DIVISION+"_Match_"+num+"!A2:D";
 
         ValueRange response = service.spreadsheets().values()
                 .get(ADMIN_SHEET, range)
@@ -505,7 +528,7 @@ public class Main {
     }
 
     public static void getFullData() throws IOException {
-        String range = "A2:ZZ1000";
+        String range = DIVISION+"_Datasheet!A2:ZZ1000";
         ValueRange response = service.spreadsheets().values()
                 .get(ADMIN_SHEET, range)
                 .execute();
