@@ -1,11 +1,22 @@
-apply plugin: 'java'
-apply plugin: 'application'
+
+plugins {
+    id 'application'
+}
+//apply plugin: 'java'
+//apply plugin: 'application'
+//apply plugin: 'org.openjfx.javafxplugin'
+
 
 group = "com.uss.madsies"
 version = "1.0"
 
 repositories {
     mavenCentral()
+}
+
+
+application {
+    mainClass = "com.example.GUIView"
 }
 
 dependencies {

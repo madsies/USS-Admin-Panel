@@ -77,4 +77,10 @@ public class TeamData
         row.addAll(history);
         return row;
     }
+
+    public int getWins() {return wins;}
+    public int getMapWins()   { return map_wins; }
+    public int getMapLosses() { return map_losses; }
+    public float getOMWP() {return omwp;}
+
  }

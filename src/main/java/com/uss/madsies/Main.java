@@ -16,6 +16,7 @@ import com.google.api.services.sheets.v4.model.*;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import javax.swing.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -37,6 +38,8 @@ public class Main {
     static String ADMIN_SHEET;
     static Sheets service;
     static List<TeamData> teamsInfo;
+    public static boolean ROUND_IN_PROGRESS = false;
+    static List<MatchUp> matches;
 
     /**
      * Creates an authorized Credential object.
@@ -77,9 +80,11 @@ public class Main {
         }
     }
 
-    public static void createNewSheet(String newSheetName) throws IOException {
+    public static void createNewSheet() throws IOException {
         SheetProperties sheetProperties = new SheetProperties();
-        sheetProperties.setTitle(newSheetName);
+        int num = getSheetNumber() + 1;
+        setSheetNumber(num);
+        sheetProperties.setTitle("Match_"+num);
 
         // Wrap in an AddSheetRequest
         AddSheetRequest addSheetRequest = new AddSheetRequest();
@@ -96,8 +101,64 @@ public class Main {
         service.spreadsheets().batchUpdate(ADMIN_SHEET, batchUpdateRequest).execute();
     }
 
-    public static void writeMatchupSheet(String sheetID, List<MatchUp> matches) throws IOException {
-        String range = sheetID + "!A1";
+    public static void deleteSheet(String sheetName) throws IOException
+    {
+        var spreadsheet = service.spreadsheets().get(ADMIN_SHEET).execute();
+        Integer sheetId = null;
+        for (Sheet sheet : spreadsheet.getSheets())
+        {
+            if (sheet.getProperties().getTitle().equals(sheetName)) {
+                sheetId = sheet.getProperties().getSheetId();
+                break;
+            }
+        }
+        if (sheetId == null) {
+            System.out.println("Sheet not found: " + sheetName);
+            return;
+        }
+
+        // Create DeleteSheetRequest
+        DeleteSheetRequest deleteSheetRequest = new DeleteSheetRequest().setSheetId(sheetId);
+        Request request = new Request().setDeleteSheet(deleteSheetRequest);
+        List<Request> requests = new ArrayList<>();
+        requests.add(request);
+
+        BatchUpdateSpreadsheetRequest body = new BatchUpdateSpreadsheetRequest().setRequests(requests);
+
+        service.spreadsheets().batchUpdate(ADMIN_SHEET, body).execute();
+    }
+
+    public static int getSheetNumber() throws IOException
+    {
+        String range = "Z1";
+        ValueRange response = service.spreadsheets().values()
+                .get(ADMIN_SHEET, range)
+                .execute();
+        List<List<Object>> values = response.getValues();
+        if (values == null || values.isEmpty()) {
+            System.out.println("No data found.");
+        }
+        else
+        {
+            return Integer.parseInt(values.get(0).get(0).toString());
+        }
+        return 0;
+    }
+
+    public static void setSheetNumber(int val) throws IOException {
+        String range = "Z1";
+        List<List<Object>> values = new ArrayList<>();
+        values.add(Arrays.asList(val));
+        ValueRange body = new ValueRange().setValues(values);
+        service.spreadsheets().values().update(ADMIN_SHEET, range, body)
+                .setValueInputOption("USER_ENTERED")
+                .execute();
+
+    }
+
+    public static void writeMatchupSheet(List<MatchUp> matches) throws IOException {
+        int num = getSheetNumber();
+        String range = "Match_"+num+"!A1";
         List<List<Object>> values = new ArrayList<>();
 
         // Headers for sheet (Readability)
@@ -106,7 +167,13 @@ public class Main {
         // Data
         for(MatchUp match : matches)
         {
-            values.add(Arrays.asList(match.team1, match.team2, 0, 0));
+            // Auto filling in bye scores
+            int scoreA = 0;
+            int scoreB = 0;
+            if (match.team1.equals("BYE")) scoreB = 2;
+            if (match.team2.equals("BYE")) scoreA = 2;
+
+            values.add(Arrays.asList(match.team1, match.team2, scoreA, scoreB));
         }
 
         ValueRange body = new ValueRange().setValues(values);
@@ -119,9 +186,10 @@ public class Main {
     /*
         Reads data from match sheet and updates win/losses accordingly
      */
-    public static void updateRecords(String sheetID) throws IOException
+    public static void updateRecords() throws IOException
     {
-        String range = sheetID + "!A2:D";
+        int num = getSheetNumber();
+        String range = "Match_"+num+"!A2:D";
 
         ValueRange response = service.spreadsheets().values()
                 .get(ADMIN_SHEET, range)
@@ -176,6 +244,36 @@ public class Main {
 
     }
 
+    public static void genericSetup() throws IOException {
+        sortTeams(true);
+        rewriteData();
+    }
+
+
+    // Do this when matches are needed to be generated
+    public static void generateRound() throws IOException {
+        matches = Matchmaker.createSwissMatchups(teamsInfo);
+        createNewSheet();
+        writeMatchupSheet(matches);
+    }
+
+    public static void cancelRound() throws IOException
+    {
+        matches.clear();
+        int num = getSheetNumber();
+        deleteSheet("Match_"+num);
+        setSheetNumber(num-1);
+    }
+
+    // Do this when all data is filled and all matches are done
+    public static void endRound() throws IOException {
+        updateRecords();
+        updateHistory(matches);
+        updateOMWP();
+        sortTeams(false);
+        rewriteData();
+    }
+
     public static void main(String... args) throws IOException, GeneralSecurityException {
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
@@ -184,25 +282,13 @@ public class Main {
                         .setApplicationName(APPLICATION_NAME)
                         .build();
 
-
         getFullData(); // Initialises data into code
-        sortTeams(true);
-        rewriteData();
 
-        // Do this when matches are needed to be generated
-        List<MatchUp> matches = Matchmaker.createSwissMatchups(teamsInfo);
-        createNewSheet("Match1");
-        writeMatchupSheet("Match1", matches);
+        SwingUtilities.invokeLater(() -> {
+            GUIView view  = new GUIView();
+            view.show();
+        });
 
-        Scanner scanner = new Scanner(System.in);
-        String name = scanner.nextLine();
-
-        // Do this when all data is filled and all matches are done
-        updateRecords("Match1");
-        updateHistory(matches);
-        updateOMWP();
-        sortTeams(false);
-        rewriteData();
     }
 
     public static void rewriteData() throws IOException {
@@ -308,45 +394,20 @@ public class Main {
     public static void sortTeams(boolean seeding) throws IOException
     {
         /*
-            Placing order Wins -> OMWP -> Map Wins -> H2H
+            Placing order Wins -> OMWP -> Map Wins -> Map Losses (Inv) -> H2H
          */
         if (!seeding)
         {
-            teamsInfo.sort(Comparator.comparingInt(o -> o.seeding));
-            teamsInfo.sort(Comparator.comparingInt(o -> o.map_wins));
-            teamsInfo.sort(Comparator.comparingDouble(o -> o.omwp));
-            teamsInfo.sort(Comparator.comparingInt(o -> o.wins));
+            teamsInfo.sort(Comparator.comparingInt((TeamData t) -> t.wins)
+                    .thenComparingDouble((TeamData t) -> t.omwp)
+                    .thenComparingInt((TeamData t) -> t.map_wins).reversed()
+                    .thenComparingInt((TeamData t) -> t.map_losses).reversed()
+                    .thenComparingInt((TeamData t) -> t.seeding).reversed());
         }
         else {
             teamsInfo.sort(Comparator.comparingInt(o -> o.seeding));
+            teamsInfo = teamsInfo.reversed();
         }
-        teamsInfo = teamsInfo.reversed();
 
-        /*
-        String range = "A2:E1000";
-        ValueRange response = service.spreadsheets().values()
-                .get(ADMIN_SHEET, range)
-                .execute();
-        List<List<Object>> values = response.getValues();
-        if (values == null || values.isEmpty()) {
-            System.out.println("No data found.");
-        }
-        else
-        {
-            // Sort by seeding score
-            if (seeding)
-            {
-                values.sort(Comparator.comparingInt(o -> Integer.parseInt((String) o.get(1))));
-            }
-            else {
-
-            }
-            values = values.reversed();
-            ValueRange body = new ValueRange().setValues(values);
-            service.spreadsheets().values().update(ADMIN_SHEET, range, body)
-                    .setValueInputOption("USER_ENTERED")
-                    .execute();
-        }
-         */
     }
 }
