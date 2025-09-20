@@ -36,6 +36,7 @@ public class Main {
 
     static String ADMIN_SHEET;
     static Sheets service;
+    static List<TeamData> teamsInfo;
 
     /**
      * Creates an authorized Credential object.
@@ -76,6 +77,10 @@ public class Main {
         }
     }
 
+    public static void createNewSheet()
+    {
+
+    }
 
     public static void main(String... args) throws IOException, GeneralSecurityException {
         // Build a new authorized API client service.
@@ -88,8 +93,104 @@ public class Main {
 
         //addTeam("meow");
         sortTeams(true);
-        Matchmaker.createSwissMatchups(Objects.requireNonNull(getFullData()));
+        List<MatchUp> matches = Matchmaker.createSwissMatchups(Objects.requireNonNull(getFullData()));
+        updateHistory(matches);
+        updateOMWP();
     }
+
+    public static void rewriteData() throws IOException {
+        List<List<Object>> sheetData = new ArrayList<>();
+        for (TeamData teamData : teamsInfo) {
+            sheetData.add(teamData.convertToSpreadsheetRow());
+        }
+        ValueRange body = new ValueRange().setValues(sheetData);
+        String range = "A2:ZZ1000";
+        service.spreadsheets().values().update(ADMIN_SHEET, range, body)
+                .setValueInputOption("USER_ENTERED")
+                .execute();
+    }
+
+    public static void updateHistory(List<MatchUp> matches) throws IOException
+    {
+        List<List<Object>> sheetData;
+        try {
+            sheetData = getFullData();
+        }
+        catch (IOException e) {
+            return;
+        }
+
+        // For each match, add opponent names to each team
+        for (MatchUp m : matches) {
+            addOpponent(m.team1, m.team2);
+            addOpponent(m.team2, m.team1);
+        }
+        rewriteData(sheetData);
+    }
+
+
+    private static void addOpponent( String team, String opponent)
+    {
+        for (TeamData team : teamsInfo) {
+            String teamName = team.teamName;
+            if (teamName.equals(team)) {
+                row.add(opponent);
+                return;
+            }
+        }
+    }
+
+    public static void updateOMWP() throws IOException {
+        List<List<Object>> sheetData;
+        try {
+            sheetData = getFullData();
+        } catch (IOException e) {
+            return;
+        }
+
+        Map<String, int[]> teamRecords = new HashMap<>();
+        for (List<Object> row : sheetData) {
+            String team = row.get(0).toString();
+            int wins = Integer.parseInt(row.get(4).toString());
+            int losses = Integer.parseInt(row.get(5).toString());
+            teamRecords.put(team, new int[]{wins, losses});
+        }
+
+        for (List<Object> row : sheetData)
+        {
+            String team = row.get(0).toString();
+            List<Object> opponents = row.subList(9, row.size());
+
+            double sum = 0;
+            int count = 0;
+
+            for (Object oppObj : opponents)
+            {
+                String opp = oppObj.toString();
+                if (!teamRecords.containsKey(opp)) continue;
+
+                int[] rec = teamRecords.get(opp);
+                int oppWins = rec[0];
+                int oppLosses = rec[1];
+
+                int totalGames = oppWins + oppLosses;
+                if (totalGames == 0) continue;
+
+                double winPct = (double) oppWins / totalGames;
+                sum += winPct;
+                count++;
+            }
+
+            double omwp = (count == 0) ? 0 : sum / count;
+            if (row.size() > 8) {
+                row.set(8, omwp);
+            } else {
+                row.add(omwp);
+            }
+        }
+        rewriteData(sheetData);
+    }
+
 
     public static void listTeams()  throws IOException
     {
@@ -133,7 +234,7 @@ public class Main {
     }
 
     public static List<List<Object>> getFullData() throws IOException {
-        String range = "A2:E1000";
+        String range = "A2:ZZ1000";
         ValueRange response = service.spreadsheets().values()
                 .get(ADMIN_SHEET, range)
                 .execute();

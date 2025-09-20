@@ -1,21 +1,30 @@
 package com.uss.madsies;
 
 import java.awt.event.WindowStateListener;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class Matchmaker
 {
-    public static List<MatchUp> createSwissMatchups(List<List<Object>> sheetData)
-    {
+    /*
         // Pool teams by number of wins
         // Place 1st in pool vs last in pool
         // If odd number in pool, downfloat the weakest to the lower class
         // If odd in total, give a bye to the highest team in the lowest class
 
-        List<MatchUp> matchups = new ArrayList<MatchUp>();
+        @param sheetData Raw sheet data from google sheets
+        @return List of Matchup objects for optimal matches
+        @
+     */
+    public Set<String> getMatchHistory(List<Object> teamData)
+    {
+        return new HashSet<>(teamData.subList(9, teamData.size()).stream().map(Object::toString).toList());
+    }
 
+    public static List<MatchUp> createSwissMatchups(List<List<Object>> sheetData)
+    {
+
+
+        List<MatchUp> matchups = new ArrayList<MatchUp>();
         List<String> currentPool = new ArrayList<>();
         int poolSize = 0;
         int bracketWins = -1;
