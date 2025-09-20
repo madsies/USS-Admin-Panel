@@ -116,6 +116,66 @@ public class Main {
 
     }
 
+    /*
+        Reads data from match sheet and updates win/losses accordingly
+     */
+    public static void updateRecords(String sheetID) throws IOException
+    {
+        String range = sheetID + "!A2:D";
+
+        ValueRange response = service.spreadsheets().values()
+                .get(ADMIN_SHEET, range)
+                .execute();
+
+        List<List<Object>> data = response.getValues();
+        if (data == null || data.isEmpty())
+        {
+            System.out.println("No match data found.");
+            return;
+        }
+
+        Map<String, TeamData> teamMap = new HashMap<>();
+        for (TeamData t : teamsInfo)
+        {
+            teamMap.put(t.teamName, t);
+        }
+
+        for (List<Object> row : data) {
+            if (row.size() < 4) continue; // skip incomplete rows
+
+            String teamA = row.get(0).toString();
+            String teamB = row.get(1).toString();
+
+            int scoreA = Integer.parseInt(row.get(2).toString());
+            int scoreB = Integer.parseInt(row.get(3).toString());
+
+            if (Objects.equals(teamA, "BYE"))
+            {
+                teamMap.get(teamB).wins++;
+                teamMap.get(teamB).map_wins += 2;
+                continue;
+            }
+            else if (Objects.equals(teamB, "BYE"))
+            {
+                teamMap.get(teamA).wins++;
+                teamMap.get(teamA).map_wins += 2;
+                continue;
+            }
+            else if (scoreA > scoreB) {
+                teamMap.get(teamA).wins++;
+                teamMap.get(teamB).losses++;
+            } else if (scoreB > scoreA) {
+                teamMap.get(teamB).wins++;
+                teamMap.get(teamA).losses++;
+            }
+            teamMap.get(teamA).map_wins += scoreA;
+            teamMap.get(teamB).map_wins += scoreB;
+            teamMap.get(teamA).map_losses += scoreB;
+            teamMap.get(teamB).map_losses += scoreA;
+        }
+
+    }
+
     public static void main(String... args) throws IOException, GeneralSecurityException {
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
@@ -124,14 +184,24 @@ public class Main {
                         .setApplicationName(APPLICATION_NAME)
                         .build();
 
-        sortTeams(true);
+
         getFullData(); // Initialises data into code
+        sortTeams(true);
+        rewriteData();
+
+        // Do this when matches are needed to be generated
         List<MatchUp> matches = Matchmaker.createSwissMatchups(teamsInfo);
         createNewSheet("Match1");
         writeMatchupSheet("Match1", matches);
 
+        Scanner scanner = new Scanner(System.in);
+        String name = scanner.nextLine();
+
+        // Do this when all data is filled and all matches are done
+        updateRecords("Match1");
         updateHistory(matches);
         updateOMWP();
+        sortTeams(false);
         rewriteData();
     }
 
@@ -201,46 +271,18 @@ public class Main {
         }
     }
 
-
-    public static void listTeams()  throws IOException
+    public static void listTeams()
     {
-        final String range = "A2:A5";
-        ValueRange response = service.spreadsheets().values()
-                .get(ADMIN_SHEET, range)
-                .execute();
-        List<List<Object>> values = response.getValues();
-        if (values == null || values.isEmpty()) {
-            System.out.println("No data found.");
-        }
-        else
+        for (TeamData team : teamsInfo)
         {
-            for (List row : values)
-            {
-                System.out.printf("%s\n", row.get(0));
-            }
+            System.out.println(team.teamName);
         }
     }
 
-    public static void addTeam(String name) throws IOException
+    public static void addTeam(String name, int seeding)
     {
-        List<List<Object>> value = Arrays.asList(Arrays.asList(name, 0, true, 0, 0));
-        String range = "A2:A1000";
-        ValueRange response = service.spreadsheets().values()
-                .get(ADMIN_SHEET, range)
-                .execute();
-        List<List<Object>> values = response.getValues();
-        if (values == null || values.isEmpty()) {
-            System.out.println("No data found.");
-        }
-        else
-        {
-            int placementOffset = values.size()+2; // Title and index offset
-            ValueRange body = new ValueRange().setValues(value);
-            range = "A"+placementOffset;
-            service.spreadsheets().values().update(ADMIN_SHEET, range, body)
-                    .setValueInputOption("USER_ENTERED")
-                    .execute();
-        }
+        TeamData data = new TeamData(name, seeding);
+        teamsInfo.add(data);
     }
 
     public static void getFullData() throws IOException {
@@ -265,6 +307,22 @@ public class Main {
 
     public static void sortTeams(boolean seeding) throws IOException
     {
+        /*
+            Placing order Wins -> OMWP -> Map Wins -> H2H
+         */
+        if (!seeding)
+        {
+            teamsInfo.sort(Comparator.comparingInt(o -> o.seeding));
+            teamsInfo.sort(Comparator.comparingInt(o -> o.map_wins));
+            teamsInfo.sort(Comparator.comparingDouble(o -> o.omwp));
+            teamsInfo.sort(Comparator.comparingInt(o -> o.wins));
+        }
+        else {
+            teamsInfo.sort(Comparator.comparingInt(o -> o.seeding));
+        }
+        teamsInfo = teamsInfo.reversed();
+
+        /*
         String range = "A2:E1000";
         ValueRange response = service.spreadsheets().values()
                 .get(ADMIN_SHEET, range)
@@ -289,5 +347,6 @@ public class Main {
                     .setValueInputOption("USER_ENTERED")
                     .execute();
         }
+         */
     }
 }

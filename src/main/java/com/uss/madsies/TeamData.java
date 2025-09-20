@@ -22,6 +22,10 @@ public class TeamData
     float omwp;
     List<String> history;
 
+    /*
+        Conversion from spreadsheet data to data class
+     */
+
     public TeamData(List<Object> spreadsheetRow)
     {
         teamName = (String)spreadsheetRow.get(0);
@@ -38,7 +42,24 @@ public class TeamData
         {
             history.add((String) spreadsheetRow.get(i));
         }
+    }
 
+    /*
+        For team creation in-code
+     */
+
+    public TeamData(String teamName, int seeding)
+    {
+        this.teamName = teamName;
+        this.seeding = seeding;
+        checkedIn = false;
+        score = 0;
+        wins = 0;
+        losses = 0;
+        map_wins = 0;
+        map_losses = 0;
+        omwp = 0;
+        history = new ArrayList<>();
     }
 
     public List<Object> convertToSpreadsheetRow()
