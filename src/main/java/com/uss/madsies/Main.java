@@ -36,6 +36,7 @@ public class Main {
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
     static String ADMIN_SHEET;
+    static String PUBLIC_SHEET = "1HRoTkeSpNUK4u2ft08EimauMcTNlndrIYl-gLZUy-8E";
     static Sheets service;
     static List<TeamData> teamsInfo;
     public static boolean ROUND_IN_PROGRESS = false;
@@ -272,6 +273,29 @@ public class Main {
         updateOMWP();
         sortTeams(false);
         rewriteData();
+    }
+
+    /*
+        Writes necessary information to the public view sheet, ran at the end of each week
+     */
+
+    public static void updatePublicStandings() throws IOException {
+        sortTeams(false);
+        List<List<Object>> sheetData = new ArrayList<>();
+        sheetData.add(Arrays.asList("Ranking", "Team", "Score", "Wins", "Losses", "OMWP"));
+        int i = 1;
+        for (TeamData t : teamsInfo)
+        {
+            sheetData.add(Arrays.asList(i, t.teamName, t.score, t.wins, t.losses, t.omwp));
+            i++;
+        }
+
+        ValueRange body = new ValueRange().setValues(sheetData);
+        String range = "A1";
+        service.spreadsheets().values().update(PUBLIC_SHEET, range, body)
+                .setValueInputOption("USER_ENTERED")
+                .execute();
+
     }
 
     public static void main(String... args) throws IOException, GeneralSecurityException {

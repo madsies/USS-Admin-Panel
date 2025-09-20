@@ -12,6 +12,7 @@ public class GUIView
     private JButton generateMatches;
     private final JButton cancelMatches;
     public JButton endMatches;
+    public JButton updatePublicBoard;
 
     public GUIView() {
 
@@ -79,6 +80,15 @@ public class GUIView
             }
         });
 
+        updatePublicBoard = new JButton("Update Public Sheet");
+        updatePublicBoard.addActionListener(e -> {
+            try {
+                Main.updatePublicStandings();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
         endMatches.setVisible(false);
         cancelMatches.setVisible(false);
 
@@ -89,6 +99,7 @@ public class GUIView
         frame.add(generateMatches);
         frame.add(cancelMatches);
         frame.add(endMatches);
+        frame.add(updatePublicBoard, BorderLayout.SOUTH);
 
         frame.setSize(1280, 720);
         frame.setLocationRelativeTo(null);
