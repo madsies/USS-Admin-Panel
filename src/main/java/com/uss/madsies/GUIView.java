@@ -35,7 +35,7 @@ public class GUIView
         JButton sortPlacement = new JButton("Fix Rankings");
         sortPlacement.addActionListener(_ -> {
             try {
-                Main.genericSetup();
+                Main.fixStandings();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

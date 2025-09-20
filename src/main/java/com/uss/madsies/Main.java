@@ -107,7 +107,7 @@ public class Main {
 
     public static void deleteSheet(String sheetName) throws IOException
     {
-        var spreadsheet = service.spreadsheets().get(ADMIN_SHEET).execute();
+        Spreadsheet spreadsheet = service.spreadsheets().get(ADMIN_SHEET).execute();
         Integer sheetId = null;
         for (Sheet sheet : spreadsheet.getSheets())
         {
@@ -257,6 +257,11 @@ public class Main {
         rewriteData();
     }
 
+    public static void fixStandings() throws IOException {
+        sortTeams(false);
+        rewriteData();
+    }
+
 
     // Do this when matches are needed to be generated
     public static void generateRound() throws IOException {
@@ -290,7 +295,7 @@ public class Main {
     public static void updatePublicStandings() throws IOException {
         sortTeams(false);
         List<List<Object>> sheetData = new ArrayList<>();
-        sheetData.add(Arrays.asList("Ranking", "Team", "Score", "Wins", "Losses", "OMWP"));
+        //sheetData.add(Arrays.asList("Ranking", "Team", "Score", "Wins", "Losses", "OMWP"));
         int i = 1;
         for (TeamData t : teamsInfo)
         {
@@ -299,7 +304,7 @@ public class Main {
         }
 
         ValueRange body = new ValueRange().setValues(sheetData);
-        String range = "A1";
+        String range = "Standings!B5";
         service.spreadsheets().values().update(PUBLIC_SHEET, range, body)
                 .setValueInputOption("USER_ENTERED")
                 .execute();
