@@ -1,6 +1,5 @@
 package com.uss.madsies;
 
-import java.awt.event.WindowStateListener;
 import java.util.*;
 
 public class Matchmaker
@@ -15,12 +14,8 @@ public class Matchmaker
         @return List of Matchup objects for optimal matches
         @
      */
-    public Set<String> getMatchHistory(List<Object> teamData)
-    {
-        return new HashSet<>(teamData.subList(9, teamData.size()).stream().map(Object::toString).toList());
-    }
 
-    public static List<MatchUp> createSwissMatchups(List<List<Object>> sheetData)
+    public static List<MatchUp> createSwissMatchups(List<TeamData> teamData)
     {
 
 
@@ -29,16 +24,14 @@ public class Matchmaker
         int poolSize = 0;
         int bracketWins = -1;
 
-        for (List<Object> teamData : sheetData)
+        for (TeamData team : teamData)
         {
-            int wins = Integer.parseInt(teamData.get(4).toString());
+            if (bracketWins == -1) bracketWins = team.wins;
 
-            if (bracketWins == -1) bracketWins = wins;
-
-            if (bracketWins == wins)
+            if (bracketWins == team.wins)
             {
                 poolSize++;
-                currentPool.add(teamData.getFirst().toString());
+                currentPool.add(team.teamName);
             }
             else
             {
@@ -67,7 +60,7 @@ public class Matchmaker
                     poolSize++;
                     bracketWins--;
                 }
-                currentPool.add(teamData.getFirst().toString());
+                currentPool.add(team.teamName);
                 poolSize++;
             }
         }

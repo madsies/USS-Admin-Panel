@@ -26,7 +26,7 @@ public class TeamData
     {
         teamName = (String)spreadsheetRow.get(0);
         seeding = Integer.parseInt((String)spreadsheetRow.get(1));
-        checkedIn = (Boolean)spreadsheetRow.get(2);
+        checkedIn = Boolean.parseBoolean((String) spreadsheetRow.get(2));
         score = Integer.parseInt((String)spreadsheetRow.get(3));
         wins = Integer.parseInt((String)spreadsheetRow.get(4));
         losses = Integer.parseInt((String)spreadsheetRow.get(5));

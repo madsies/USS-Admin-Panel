@@ -93,9 +93,11 @@ public class Main {
 
         //addTeam("meow");
         sortTeams(true);
-        List<MatchUp> matches = Matchmaker.createSwissMatchups(Objects.requireNonNull(getFullData()));
+        getFullData(); // Initialises data into code
+        List<MatchUp> matches = Matchmaker.createSwissMatchups(teamsInfo);
         updateHistory(matches);
         updateOMWP();
+        rewriteData();
     }
 
     public static void rewriteData() throws IOException {
@@ -112,61 +114,40 @@ public class Main {
 
     public static void updateHistory(List<MatchUp> matches) throws IOException
     {
-        List<List<Object>> sheetData;
-        try {
-            sheetData = getFullData();
-        }
-        catch (IOException e) {
-            return;
-        }
-
-        // For each match, add opponent names to each team
         for (MatchUp m : matches) {
             addOpponent(m.team1, m.team2);
             addOpponent(m.team2, m.team1);
         }
-        rewriteData(sheetData);
     }
-
 
     private static void addOpponent( String team, String opponent)
     {
-        for (TeamData team : teamsInfo) {
-            String teamName = team.teamName;
-            if (teamName.equals(team)) {
-                row.add(opponent);
+        for (TeamData t : teamsInfo)
+        {
+            String teamName = t.teamName;
+            if (teamName.equals(team))
+            {
+                t.history.add(opponent);
                 return;
             }
         }
     }
 
     public static void updateOMWP() throws IOException {
-        List<List<Object>> sheetData;
-        try {
-            sheetData = getFullData();
-        } catch (IOException e) {
-            return;
-        }
 
         Map<String, int[]> teamRecords = new HashMap<>();
-        for (List<Object> row : sheetData) {
-            String team = row.get(0).toString();
-            int wins = Integer.parseInt(row.get(4).toString());
-            int losses = Integer.parseInt(row.get(5).toString());
-            teamRecords.put(team, new int[]{wins, losses});
+        for (TeamData team : teamsInfo)
+        {
+            teamRecords.put(team.teamName, new int[]{team.wins, team.losses});
         }
 
-        for (List<Object> row : sheetData)
+        for (TeamData team : teamsInfo)
         {
-            String team = row.get(0).toString();
-            List<Object> opponents = row.subList(9, row.size());
-
             double sum = 0;
             int count = 0;
 
-            for (Object oppObj : opponents)
+            for (String opp : team.history)
             {
-                String opp = oppObj.toString();
                 if (!teamRecords.containsKey(opp)) continue;
 
                 int[] rec = teamRecords.get(opp);
@@ -181,14 +162,8 @@ public class Main {
                 count++;
             }
 
-            double omwp = (count == 0) ? 0 : sum / count;
-            if (row.size() > 8) {
-                row.set(8, omwp);
-            } else {
-                row.add(omwp);
-            }
+            team.omwp = (float) ((count == 0) ? 0 : sum / count);
         }
-        rewriteData(sheetData);
     }
 
 
@@ -233,7 +208,7 @@ public class Main {
         }
     }
 
-    public static List<List<Object>> getFullData() throws IOException {
+    public static void getFullData() throws IOException {
         String range = "A2:ZZ1000";
         ValueRange response = service.spreadsheets().values()
                 .get(ADMIN_SHEET, range)
@@ -244,9 +219,13 @@ public class Main {
         }
         else
         {
-            return values;
+            List<TeamData> data = new ArrayList<>();
+            for (List<Object> row : values)
+            {
+               data.add(new TeamData(row));
+            }
+            teamsInfo = data;
         }
-        return null;
     }
 
     public static void sortTeams(boolean seeding) throws IOException
