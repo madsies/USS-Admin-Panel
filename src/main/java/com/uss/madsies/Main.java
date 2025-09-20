@@ -12,7 +12,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
-import com.google.api.services.sheets.v4.model.ValueRange;
+import com.google.api.services.sheets.v4.model.*;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -77,8 +77,42 @@ public class Main {
         }
     }
 
-    public static void createNewSheet()
-    {
+    public static void createNewSheet(String newSheetName) throws IOException {
+        SheetProperties sheetProperties = new SheetProperties();
+        sheetProperties.setTitle(newSheetName);
+
+        // Wrap in an AddSheetRequest
+        AddSheetRequest addSheetRequest = new AddSheetRequest();
+        addSheetRequest.setProperties(sheetProperties);
+
+        // Wrap in a general Request
+        Request request = new Request();
+        request.setAddSheet(addSheetRequest);
+
+        // Send batchUpdate request
+        BatchUpdateSpreadsheetRequest batchUpdateRequest = new BatchUpdateSpreadsheetRequest();
+        batchUpdateRequest.setRequests(Collections.singletonList(request));
+
+        service.spreadsheets().batchUpdate(ADMIN_SHEET, batchUpdateRequest).execute();
+    }
+
+    public static void writeMatchupSheet(String sheetID, List<MatchUp> matches) throws IOException {
+        String range = sheetID + "!A1";
+        List<List<Object>> values = new ArrayList<>();
+
+        // Headers for sheet (Readability)
+        values.add(Arrays.asList("Team A", "Team B", "Team A Score", "Team B Score"));
+
+        // Data
+        for(MatchUp match : matches)
+        {
+            values.add(Arrays.asList(match.team1, match.team2, 0, 0));
+        }
+
+        ValueRange body = new ValueRange().setValues(values);
+        service.spreadsheets().values().update(ADMIN_SHEET, range, body)
+                .setValueInputOption("USER_ENTERED")
+                .execute();
 
     }
 
@@ -86,15 +120,16 @@ public class Main {
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Main.getAdminSheet();
-
         service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                         .setApplicationName(APPLICATION_NAME)
                         .build();
 
-        //addTeam("meow");
         sortTeams(true);
         getFullData(); // Initialises data into code
         List<MatchUp> matches = Matchmaker.createSwissMatchups(teamsInfo);
+        createNewSheet("Match1");
+        writeMatchupSheet("Match1", matches);
+
         updateHistory(matches);
         updateOMWP();
         rewriteData();
@@ -133,7 +168,7 @@ public class Main {
         }
     }
 
-    public static void updateOMWP() throws IOException {
+    public static void updateOMWP() {
 
         Map<String, int[]> teamRecords = new HashMap<>();
         for (TeamData team : teamsInfo)
