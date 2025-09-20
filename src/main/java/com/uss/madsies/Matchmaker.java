@@ -2,8 +2,7 @@ package com.uss.madsies;
 
 import java.util.*;
 
-public class Matchmaker
-{
+public class Matchmaker {
     /*
         // Pool teams by number of wins
         // Place 1st in pool vs last in pool
@@ -15,38 +14,30 @@ public class Matchmaker
         @
      */
 
-    public static List<MatchUp> createSwissMatchups(List<TeamData> teamData)
-    {
-
+    public static List<MatchUp> createSwissMatchups(List<TeamData> teamData) {
 
         List<MatchUp> matchups = new ArrayList<MatchUp>();
         List<String> currentPool = new ArrayList<>();
         int poolSize = 0;
         int bracketWins = -1;
 
-        for (TeamData team : teamData)
-        {
+        for (TeamData team : teamData) {
+            if (!team.checkedIn) continue;
             if (bracketWins == -1) bracketWins = team.wins;
 
-            if (bracketWins == team.wins)
-            {
+            if (bracketWins == team.wins) {
                 poolSize++;
                 currentPool.add(team.teamName);
-            }
-            else
-            {
+            } else {
                 String downFloat = "";
-                if (poolSize % 2 != 0)
-                {
+                if (poolSize % 2 != 0) {
                     downFloat = currentPool.getLast();
                     currentPool.removeLast();
                     poolSize--;
                 }
 
-                if (poolSize != 0)
-                {
-                    for (int i = 0; i < poolSize / 2; i++)
-                    {
+                if (poolSize != 0) {
+                    for (int i = 0; i < poolSize / 2; i++) {
                         matchups.add(new MatchUp(currentPool.get(i), currentPool.get(poolSize - 1 - i)));
                     }
                 }
@@ -54,8 +45,7 @@ public class Matchmaker
                 currentPool.clear();
                 poolSize = 0;
 
-                if (!Objects.equals(downFloat, ""))
-                {
+                if (!Objects.equals(downFloat, "")) {
                     currentPool.add(downFloat);
                     poolSize++;
                     bracketWins--;
@@ -66,24 +56,30 @@ public class Matchmaker
         }
 
         System.out.println("Pool size: " + poolSize);
-        if (poolSize % 2 != 0)
-        {
+        if (poolSize % 2 != 0) {
             currentPool.add("BYE");
             poolSize++;
         }
-        for (int i = 0; i < poolSize/2; i++)
-        {
-            matchups.add(new MatchUp(currentPool.get(i), currentPool.get(poolSize-1-i)));
+        for (int i = 0; i < poolSize / 2; i++) {
+            matchups.add(new MatchUp(currentPool.get(i), currentPool.get(poolSize - 1 - i)));
         }
         currentPool.clear();
 
 
-        for (MatchUp matchup : matchups)
-        {
+        for (MatchUp matchup : matchups) {
             System.out.println(matchup.toString());
         }
 
 
         return matchups;
+    }
+
+    public static String getMatchupsString(List<MatchUp> matchups)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (MatchUp match : matchups) {
+            sb.append(match.toString()).append("\n");
+        }
+        return sb.toString();
     }
 }

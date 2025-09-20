@@ -78,9 +78,19 @@ public class TeamData
         return row;
     }
 
-    public int getWins() {return wins;}
-    public int getMapWins()   { return map_wins; }
-    public int getMapLosses() { return map_losses; }
-    public float getOMWP() {return omwp;}
+    /*
+        Clears everything bar seeding and name
+     */
 
+    public void Clear()
+    {
+        checkedIn = true;
+        score = 0;
+        wins = 0;
+        losses = 0;
+        map_wins = 0;
+        map_losses = 0;
+        omwp = 0;
+        history = new ArrayList<>();
+    }
  }

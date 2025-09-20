@@ -17,10 +17,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.*;
+import java.util.List;
 
 public class Main {
     private static final String APPLICATION_NAME = "Google Sheets API Java Quickstart";
@@ -253,6 +256,7 @@ public class Main {
 
     // Do this when matches are needed to be generated
     public static void generateRound() throws IOException {
+        getFullData();
         matches = Matchmaker.createSwissMatchups(teamsInfo);
         createNewSheet();
         writeMatchupSheet(matches);
@@ -295,6 +299,35 @@ public class Main {
         service.spreadsheets().values().update(PUBLIC_SHEET, range, body)
                 .setValueInputOption("USER_ENTERED")
                 .execute();
+
+    }
+
+    public static void copyRound()
+    {
+        StringSelection stringSelection = new StringSelection(Matchmaker.getMatchupsString(matches));
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
+    }
+
+    public static void wipeData()
+    {
+        for (TeamData t : teamsInfo)
+        {
+            t.Clear();
+        }
+        try
+        {
+            int num = getSheetNumber();
+            for (int i = num; i > 0; i--)
+            {
+                deleteSheet("Match_"+i);
+            }
+            setSheetNumber(0);
+            rewriteData();
+        }
+        catch (IOException e)
+        {
+            System.out.println(e.getMessage());
+        }
 
     }
 
