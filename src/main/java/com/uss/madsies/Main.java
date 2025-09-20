@@ -224,12 +224,14 @@ public class Main {
             if (Objects.equals(teamA, "BYE"))
             {
                 teamMap.get(teamB).wins++;
+                teamMap.get(teamB).score += 3;
                 teamMap.get(teamB).map_wins += 2;
                 continue;
             }
             else if (Objects.equals(teamB, "BYE"))
             {
                 teamMap.get(teamA).wins++;
+                teamMap.get(teamA).score += 3;
                 teamMap.get(teamA).map_wins += 2;
                 continue;
             }
@@ -244,6 +246,8 @@ public class Main {
             teamMap.get(teamB).map_wins += scoreB;
             teamMap.get(teamA).map_losses += scoreB;
             teamMap.get(teamB).map_losses += scoreA;
+            teamMap.get(teamA).score = teamMap.get(teamA).wins * 3;
+            teamMap.get(teamB).score = teamMap.get(teamB).wins * 3;
         }
 
     }
@@ -308,6 +312,28 @@ public class Main {
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
     }
 
+    public static void copyNonCheckedIn()
+    {
+        try {
+            getFullData(); // Load full data (may have been un-ticked since last check)
+        }
+        catch (IOException e)
+        {
+            System.out.println(e.getMessage());
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("Teams that have not Checked in:\n");
+        for (TeamData t : teamsInfo)
+        {
+            if (!t.checkedIn)
+            {
+                sb.append(t.teamName).append("\n");
+            }
+        }
+        StringSelection stringSelection = new StringSelection(sb.toString());
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
+    }
+
     public static void wipeData()
     {
         for (TeamData t : teamsInfo)
@@ -368,6 +394,37 @@ public class Main {
         }
     }
 
+    public static void copyMissingMatches() throws IOException {
+        // Go through matches in current round, print names of teams of unfinished games
+        int num = getSheetNumber();
+        String range = "Match_"+num+"!A2:D";
+
+        ValueRange response = service.spreadsheets().values()
+                .get(ADMIN_SHEET, range)
+                .execute();
+
+        List<List<Object>> data = response.getValues();
+        if (data == null || data.isEmpty())
+        {
+            System.out.println("No match data found.");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Matches without a score:\n");
+
+        for (List<Object> row : data)
+        {
+            if (row.get(2).equals("0") && row.get(3).equals("0"))
+            {
+                sb.append(row.get(0)).append(" vs ").append(row.get(1)).append("\n");
+            }
+        }
+
+        StringSelection stringSelection = new StringSelection(sb.toString());
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
+    }
+
     private static void addOpponent( String team, String opponent)
     {
         for (TeamData t : teamsInfo)
@@ -414,12 +471,26 @@ public class Main {
         }
     }
 
-    public static void listTeams()
+    public static void checkAllTeams(boolean in)
     {
         for (TeamData team : teamsInfo)
         {
-            System.out.println(team.teamName);
+            team.checkedIn = in;
         }
+        try
+        {
+            rewriteData();
+        }
+        catch (IOException e)
+        {
+            System.out.println(e.getMessage());
+        }
+
+    }
+
+    public static void listTeams()
+    {
+
     }
 
     public static void addTeam(String name, int seeding)

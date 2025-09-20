@@ -11,7 +11,6 @@ public class Matchmaker {
 
         @param sheetData Raw sheet data from google sheets
         @return List of Matchup objects for optimal matches
-        @
      */
 
     public static List<MatchUp> createSwissMatchups(List<TeamData> teamData) {
@@ -25,10 +24,12 @@ public class Matchmaker {
             if (!team.checkedIn) continue;
             if (bracketWins == -1) bracketWins = team.wins;
 
-            if (bracketWins == team.wins) {
+            if (bracketWins == team.wins)
+            {
                 poolSize++;
                 currentPool.add(team.teamName);
-            } else {
+            } else
+            {
                 String downFloat = "";
                 if (poolSize % 2 != 0) {
                     downFloat = currentPool.getLast();
@@ -36,8 +37,10 @@ public class Matchmaker {
                     poolSize--;
                 }
 
-                if (poolSize != 0) {
-                    for (int i = 0; i < poolSize / 2; i++) {
+                if (poolSize != 0)
+                {
+                    for (int i = 0; i < poolSize / 2; i++)
+                    {
                         matchups.add(new MatchUp(currentPool.get(i), currentPool.get(poolSize - 1 - i)));
                     }
                 }
