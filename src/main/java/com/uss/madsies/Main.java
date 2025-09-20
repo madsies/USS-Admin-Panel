@@ -39,7 +39,7 @@ public class Main {
     static String PUBLIC_SHEET = "1HRoTkeSpNUK4u2ft08EimauMcTNlndrIYl-gLZUy-8E";
     static Sheets service;
     static List<TeamData> teamsInfo;
-    public static boolean ROUND_IN_PROGRESS = false;
+    //public static boolean ROUND_IN_PROGRESS = false;
     static List<MatchUp> matches;
 
     /**
@@ -141,7 +141,7 @@ public class Main {
         }
         else
         {
-            return Integer.parseInt(values.get(0).get(0).toString());
+            return Integer.parseInt(values.getFirst().getFirst().toString());
         }
         return 0;
     }
@@ -149,7 +149,7 @@ public class Main {
     public static void setSheetNumber(int val) throws IOException {
         String range = "Z1";
         List<List<Object>> values = new ArrayList<>();
-        values.add(Arrays.asList(val));
+        values.add(List.of(val));
         ValueRange body = new ValueRange().setValues(values);
         service.spreadsheets().values().update(ADMIN_SHEET, range, body)
                 .setValueInputOption("USER_ENTERED")
@@ -327,7 +327,7 @@ public class Main {
                 .execute();
     }
 
-    public static void updateHistory(List<MatchUp> matches) throws IOException
+    public static void updateHistory(List<MatchUp> matches)
     {
         for (MatchUp m : matches) {
             addOpponent(m.team1, m.team2);
@@ -415,7 +415,7 @@ public class Main {
         }
     }
 
-    public static void sortTeams(boolean seeding) throws IOException
+    public static void sortTeams(boolean seeding)
     {
         /*
             Placing order Wins -> OMWP -> Map Wins -> Map Losses (Inv) -> H2H

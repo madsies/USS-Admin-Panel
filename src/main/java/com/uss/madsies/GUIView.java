@@ -7,9 +7,9 @@ import java.io.IOException;
 
 public class GUIView
 {
-    private JFrame frame;
-    private JButton sortSeeding;
-    private JButton generateMatches;
+    private final JFrame frame;
+    private final JButton sortSeeding;
+    private final JButton generateMatches;
     private final JButton cancelMatches;
     public JButton endMatches;
     public JButton updatePublicBoard;
@@ -21,7 +21,7 @@ public class GUIView
 
         JLabel label = new JLabel("Hello, Swing!", JLabel.CENTER);
         sortSeeding = new JButton("Sort Seeding");
-        sortSeeding.addActionListener(e -> {
+        sortSeeding.addActionListener(_ -> {
             try {
                 Main.genericSetup();
             } catch (IOException ex) {
@@ -31,7 +31,7 @@ public class GUIView
         cancelMatches = new JButton("Cancel Matches");
         endMatches = new JButton("End Matches");
         generateMatches = new JButton("Generate Matches");
-        generateMatches.addActionListener(e -> {
+        generateMatches.addActionListener(_ -> {
             try {
                 Main.generateRound();
                 endMatches.setVisible(true);
@@ -41,7 +41,7 @@ public class GUIView
             }
         });
 
-        endMatches.addActionListener(e -> {
+        endMatches.addActionListener(_ -> {
             int result = JOptionPane.showConfirmDialog(
                     frame,                     // parent component
                     "Are you sure all scores have been submitted?", // message
@@ -61,7 +61,7 @@ public class GUIView
             }
         });
 
-        cancelMatches.addActionListener(e -> {
+        cancelMatches.addActionListener(_ -> {
             int result = JOptionPane.showConfirmDialog(
                     frame,                     // parent component
                     "Are you sure you want to cancel the round?", // message
@@ -81,7 +81,7 @@ public class GUIView
         });
 
         updatePublicBoard = new JButton("Update Public Sheet");
-        updatePublicBoard.addActionListener(e -> {
+        updatePublicBoard.addActionListener(_ -> {
             try {
                 Main.updatePublicStandings();
             } catch (IOException ex) {
