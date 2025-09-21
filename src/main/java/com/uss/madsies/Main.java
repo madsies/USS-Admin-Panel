@@ -10,13 +10,13 @@ import java.io.*;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Main {
 
-    static String ADMIN_SHEET;
+    static String ADMIN_SHEET; // Stored privately
     static String PUBLIC_SHEET = "1HRoTkeSpNUK4u2ft08EimauMcTNlndrIYl-gLZUy-8E";
-    static Sheets service;
-    static List<TeamData> teamsInfo;
+    static List<TeamData> teamsInfo = new ArrayList<>();
     static List<MatchUp> matches;
 
     public static void main(String... args) throws IOException, GeneralSecurityException
@@ -27,6 +27,8 @@ public class Main {
 
         getFullData(); // Initialises data into code
 
+        addSeedAndCreateTeams();
+
         // Initialise GUI
         SwingUtilities.invokeLater(() -> {
             GUIView view  = new GUIView();
@@ -35,8 +37,13 @@ public class Main {
 
     }
 
-
-    public static void writeMatchupSheet(List<MatchUp> matches) throws IOException {
+    /**
+     *  Creates new sheet and writes matchups for admins to submit match scores
+     *
+     * @param matches Current list of matches in round
+     */
+    public static void writeMatchupSheet(List<MatchUp> matches) throws IOException
+    {
         int num = SheetsManagement.getSheetNumber();
         String range = "Match_"+num+"!A1";
         List<List<Object>> values = new ArrayList<>();
@@ -56,13 +63,10 @@ public class Main {
             values.add(Arrays.asList(match.team1, match.team2, scoreA, scoreB));
         }
 
-        ValueRange body = new ValueRange().setValues(values);
-        service.spreadsheets().values().update(ADMIN_SHEET, range, body)
-                .setValueInputOption("USER_ENTERED")
-                .execute();
+        SheetsManagement.writeData(values, ADMIN_SHEET, range);
     }
 
-    /*
+    /**
         Reads data from match sheet and updates win/losses accordingly
      */
     public static void updateRecords() throws IOException
@@ -118,11 +122,19 @@ public class Main {
 
     }
 
+    /**
+     *  For initial startup, sets up data and sorts by seed
+     */
+
     public static void genericSetup() throws IOException {
         getFullData();
         sortTeams(true);
         rewriteData();
     }
+
+    /**
+     * Orders standings by correct order and writes back to disk
+     */
 
     public static void fixStandings() throws IOException
     {
@@ -344,7 +356,7 @@ public class Main {
         List<TeamData> data = new ArrayList<>();
         for (List<Object> row : sheetData)
         {
-            System.out.println(row);
+            if (row.isEmpty()) return;
             data.add(new TeamData(row));
         }
         teamsInfo = data;
@@ -361,11 +373,72 @@ public class Main {
                     .thenComparingDouble((TeamData t) -> t.omwp)
                     .thenComparingInt((TeamData t) -> t.map_wins).reversed()
                     .thenComparingInt((TeamData t) -> t.map_losses).reversed()
-                    .thenComparingInt((TeamData t) -> t.seeding).reversed());
+                    .thenComparingDouble((TeamData t) -> t.seeding).reversed());
         }
         else {
-            teamsInfo.sort(Comparator.comparingInt(o -> o.seeding));
+            teamsInfo.sort(Comparator.comparingDouble(o -> o.seeding));
             teamsInfo = teamsInfo.reversed();
+        }
+    }
+
+    public static void addSeedAndCreateTeams() throws IOException
+    {
+        HashMap<String, Double> rankings = calculateSeedingRanks();
+        for (Map.Entry<String, Double> entry : rankings.entrySet())
+        {
+            teamsInfo.add(new TeamData(entry.getKey(), entry.getValue()));
+        }
+
+        grantSeedingWins();
+        rewriteData();
+    }
+
+    public static HashMap<String, Double> calculateSeedingRanks() throws IOException
+    {
+        getFullData();
+        List<List<Object>> seedData = SheetsManagement.fetchData(ADMIN_SHEET, "Seeding!A1:G");
+
+        HashMap<String, Double> rankings = new HashMap<>();
+        List<List<Object>> rawRankings = new ArrayList<>();
+        rawRankings.add(new ArrayList<>());
+        for (List<Object> row : seedData)
+        {
+            String name = row.getFirst().toString();
+            ArrayList<Integer> ranks = (ArrayList<Integer>) new ArrayList<>(row.subList(2, row.size()))
+                    .stream().map(o -> Integer.parseInt(o.toString())).collect(Collectors.toList());
+            double rating = SeedingTools.calculateWeightedSeed(ranks);
+            rankings.put(name, rating);
+            rawRankings.add(new ArrayList<>(Collections.singleton(rating)));
+        }
+
+        rawRankings.removeFirst();
+        SheetsManagement.writeData(rawRankings, ADMIN_SHEET, "Seeding!I1");
+
+        return rankings;
+    }
+
+    public static void grantSeedingWins()
+    {
+        List<Integer> thresholds = SeedingTools.calcSeedingThresholds(teamsInfo.size());
+
+        sortTeams(true);
+        int count = 0;
+        for (TeamData t : teamsInfo)
+        {
+            count++;
+            if (count <= thresholds.getFirst())
+            {
+                t.addWins(3);
+                continue;
+            }
+            if (count <= thresholds.get(1))
+            {
+                t.addWins(2);
+                continue;
+            }
+            if (count <= thresholds.get(2)) {
+                t.addWins(1);
+            }
         }
     }
 }

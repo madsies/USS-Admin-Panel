@@ -6,8 +6,8 @@ import java.util.List;
 public class SeedingTools
 {
     public static final double HIGH_THRESHOLD_PERCENT = 15;
-    public static final double MID_THRESHOLD_PERCENT = 30;
-    public static final double LOW_THRESHOLD_PERCENT = 50;
+    public static final double MID_THRESHOLD_PERCENT = 40;
+    public static final double LOW_THRESHOLD_PERCENT = 70;
 
     /**
      *  Sorts Team rankings with highest rank first

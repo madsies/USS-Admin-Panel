@@ -12,7 +12,7 @@ import java.util.List;
 public class TeamData
 {
     String teamName;
-    int seeding;
+    double seeding;
     boolean checkedIn;
     int score; // Wins * 3
     int wins;
@@ -29,7 +29,7 @@ public class TeamData
     public TeamData(List<Object> spreadsheetRow)
     {
         teamName = (String)spreadsheetRow.get(0);
-        seeding = Integer.parseInt((String)spreadsheetRow.get(1));
+        seeding = Double.parseDouble((String)spreadsheetRow.get(1));
         checkedIn = Boolean.parseBoolean((String) spreadsheetRow.get(2));
         score = Integer.parseInt((String)spreadsheetRow.get(3));
         wins = Integer.parseInt((String)spreadsheetRow.get(4));
@@ -48,7 +48,7 @@ public class TeamData
         For team creation in-code
      */
 
-    public TeamData(String teamName, int seeding)
+    public TeamData(String teamName, double seeding)
     {
         this.teamName = teamName;
         this.seeding = seeding;
@@ -92,5 +92,11 @@ public class TeamData
         map_losses = 0;
         omwp = 0;
         history = new ArrayList<>();
+    }
+
+    public void addWins(int count)
+    {
+        this.wins += count;
+        this.score += count*3;
     }
  }
