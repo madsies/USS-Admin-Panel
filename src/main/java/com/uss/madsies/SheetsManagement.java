@@ -193,4 +193,30 @@ public class SheetsManagement
             throw new RuntimeException(e);
         }
     }
+
+    public static boolean readMatchFlag()
+    {
+        List<List<Object>> data = fetchData(ADMIN_SHEET, "Datasheet!Y1");
+        return Boolean.parseBoolean(data.getFirst().getFirst().toString());
+    }
+
+    public static void writeMatchFlag(boolean flag)
+    {
+        List<List<Object>> data = new ArrayList<>(List.of(List.of(flag)));
+        writeData(data, ADMIN_SHEET, "Datasheet!Y1");
+    }
+
+    public static void reduceSheetNumber()
+    {
+        try
+        {
+            int num = getSheetNumber() - 1;
+            setSheetNumber(num);
+        }
+        catch (IOException e)
+        {
+            System.out.println(e.getMessage());
+        }
+
+    }
 }

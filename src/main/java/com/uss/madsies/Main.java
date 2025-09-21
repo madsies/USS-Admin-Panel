@@ -14,13 +14,17 @@ public class Main {
     static String ADMIN_SHEET; // Stored privately
     static String PUBLIC_SHEET = "1HRoTkeSpNUK4u2ft08EimauMcTNlndrIYl-gLZUy-8E";
     static List<TeamData> teamsInfo = new ArrayList<>();
-    static List<MatchUp> matches;
+    static List<MatchUp> matches = new ArrayList<>();
+    static boolean isCurrentMatch = false;
 
     public static void main(String... args) throws IOException, GeneralSecurityException
     {
         // Build a new authorized API client service.
         SheetsManagement.generateService();
         ADMIN_SHEET = SheetsManagement.getAdminSheet();
+        isCurrentMatch = SheetsManagement.readMatchFlag();
+        if (isCurrentMatch) loadCurrentMatch();
+
 
         getFullData(); // Initialises data into code
 
@@ -28,6 +32,7 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             GUIView view  = new GUIView();
             view.show();
+            view.setMatchStatus(isCurrentMatch);
         });
     }
 
@@ -76,7 +81,8 @@ public class Main {
             teamMap.put(t.teamName, t);
         }
 
-        for (List<Object> row : data) {
+        for (List<Object> row : data)
+        {
             if (row.size() < 4) continue; // skip incomplete rows
 
             String teamA = row.get(0).toString();
@@ -87,31 +93,27 @@ public class Main {
 
             if (Objects.equals(teamA, "BYE"))
             {
-                teamMap.get(teamB).wins++;
-                teamMap.get(teamB).score += 3;
+                teamMap.get(teamB).addWins(1);
                 teamMap.get(teamB).map_wins += 2;
                 continue;
             }
             else if (Objects.equals(teamB, "BYE"))
             {
-                teamMap.get(teamA).wins++;
-                teamMap.get(teamA).score += 3;
+                teamMap.get(teamA).addWins(1);
                 teamMap.get(teamA).map_wins += 2;
                 continue;
             }
             else if (scoreA > scoreB) {
-                teamMap.get(teamA).wins++;
+                teamMap.get(teamA).addWins(1);;
                 teamMap.get(teamB).losses++;
             } else if (scoreB > scoreA) {
-                teamMap.get(teamB).wins++;
+                teamMap.get(teamB).addWins(1);;
                 teamMap.get(teamA).losses++;
             }
             teamMap.get(teamA).map_wins += scoreA;
             teamMap.get(teamB).map_wins += scoreB;
             teamMap.get(teamA).map_losses += scoreB;
             teamMap.get(teamB).map_losses += scoreA;
-            teamMap.get(teamA).score = teamMap.get(teamA).wins * 3;
-            teamMap.get(teamB).score = teamMap.get(teamB).wins * 3;
         }
 
     }
@@ -139,35 +141,56 @@ public class Main {
     // Do this when matches are needed to be generated
     public static void generateRound() throws IOException
     {
+        if (isCurrentMatch) {
+            throw new RuntimeException("Round is already currently running..");
+        }
+
         getFullData();
         matches = Matchmaker.createSwissMatchups(teamsInfo);
         SheetsManagement.createNewSheet();
         writeMatchupSheet(matches);
+
+        SheetsManagement.writeMatchFlag(true);
+        isCurrentMatch = true;
     }
 
     public static void cancelRound() throws IOException
     {
+        if (!isCurrentMatch)
+        {
+            throw new RuntimeException("How has this been ran?");
+        }
         matches.clear();
         int num = SheetsManagement.getSheetNumber();
         SheetsManagement.deleteSheet("Match_"+num);
-        SheetsManagement.setSheetNumber(num-1);
+
+        SheetsManagement.writeMatchFlag(false);
+        isCurrentMatch = false;
+        SheetsManagement.reduceSheetNumber(); // -1
     }
 
     // Do this when all data is filled and all matches are done
     public static void endRound() throws IOException
     {
+        if (!isCurrentMatch)
+        {
+            throw new RuntimeException("Round was not running..");
+        }
         updateRecords();
         updateHistory(matches);
         updateOMWP();
         sortTeams(false);
         rewriteData();
+
+        SheetsManagement.writeMatchFlag(false);
+        isCurrentMatch = false;
     }
 
     /*
         Writes necessary information to the public view sheet, ran at the end of each week
      */
 
-    public static void updatePublicStandings() throws IOException
+    public static void updatePublicStandings()
     {
         sortTeams(false);
         List<List<Object>> sheetData = new ArrayList<>();
@@ -427,4 +450,23 @@ public class Main {
             }
         }
     }
+
+    public static void loadCurrentMatch()
+    {
+        try {
+            int num = SheetsManagement.getSheetNumber();
+            List<List<Object>> data = SheetsManagement.fetchData(ADMIN_SHEET, "Match_" + num + "!A1:D");
+
+            for (List<Object> row : data) {
+                matches.add(new MatchUp(row.get(0).toString(), row.get(3).toString()));
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
+    }
+
+
+
 }

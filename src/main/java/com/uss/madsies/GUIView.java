@@ -1,6 +1,8 @@
 package com.uss.madsies;
 
 
+import org.w3c.dom.Text;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
@@ -13,12 +15,23 @@ public class GUIView
     private final JButton cancelMatches;
     public JButton endMatches;
     public JButton updatePublicBoard;
+    public TextArea errorText;
+
+    public boolean matchStatus;
+
+    public void setMatchStatus(boolean ms)
+    {
+        this.matchStatus = ms;
+    }
 
     public GUIView() {
-
+        matchStatus = Main.isCurrentMatch;
         frame = new JFrame("USS Admin Control Panel:");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new GridLayout(3,1,10,10));
+
+        errorText = new TextArea();
+        errorText.setEditable(false);
 
         Image icon = Toolkit.getDefaultToolkit().getImage(
                 GUIView.class.getResource("/images/USS.png")
@@ -43,7 +56,7 @@ public class GUIView
             try {
                 Main.fixStandings();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                JOptionPane.showMessageDialog(frame, e.getMessage());
             }
         });
 
@@ -90,6 +103,9 @@ public class GUIView
                 copyUnfinished.setVisible(true);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
+            } catch (RuntimeException ex)
+            {
+                JOptionPane.showMessageDialog(frame, ex.getMessage());
             }
         });
 
@@ -98,7 +114,7 @@ public class GUIView
                     Main.copyMissingMatches();
                     JOptionPane.showMessageDialog(frame, "Copied to clipboard");
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    JOptionPane.showMessageDialog(frame, e.getMessage());
                 }
         });
 
@@ -121,7 +137,7 @@ public class GUIView
                 copyMatches.setVisible(false);
                 copyUnfinished.setVisible(false);
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                JOptionPane.showMessageDialog(frame, ex.getMessage());
             }
         }
          });
@@ -142,15 +158,25 @@ public class GUIView
                     copyMatches.setVisible(false);
                     copyUnfinished.setVisible(false);
                 } catch (IOException ex) {
-                    throw new RuntimeException(ex);
+                    JOptionPane.showMessageDialog(frame, ex.getMessage());
                 }
             }
         });
 
-        endMatches.setVisible(false);
-        cancelMatches.setVisible(false);
-        copyMatches.setVisible(false);
-        copyUnfinished.setVisible(false);
+        if (!matchStatus) {
+            endMatches.setVisible(false);
+            cancelMatches.setVisible(false);
+            copyMatches.setVisible(false);
+            copyUnfinished.setVisible(false);
+        }
+        else
+        {
+            endMatches.setVisible(true);
+            cancelMatches.setVisible(true);
+            copyMatches.setVisible(true);
+            copyUnfinished.setVisible(true);
+        }
+
 
         JPanel matchPanel = new JPanel(new GridLayout(2,3,15,15));
         matchPanel.setBorder(BorderFactory.createTitledBorder("Matches"));
@@ -162,11 +188,7 @@ public class GUIView
 
         updatePublicBoard = new JButton("Update Public Sheet");
         updatePublicBoard.addActionListener(_ -> {
-            try {
-                Main.updatePublicStandings();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
+            Main.updatePublicStandings();
         });
 
         JButton copyUnreadyTeams = new JButton("Copy List of non-checked in teams");
