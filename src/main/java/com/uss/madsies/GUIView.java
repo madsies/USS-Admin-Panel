@@ -16,7 +16,7 @@ public class GUIView
 
     public GUIView() {
 
-        frame = new JFrame("USS Admin Control Panel: Division "+Main.DIVISION);
+        frame = new JFrame("USS Admin Control Panel:");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new GridLayout(3,1,10,10));
 
@@ -25,16 +25,6 @@ public class GUIView
         );
 
         frame.setIconImage(icon);
-
-        JToolBar tb = new JToolBar();
-        JPanel panel = new JPanel();
-        JComboBox combo = new JComboBox(new String[] {"One", "Two", "Three"});
-        combo.addItemListener(e -> Main.changeDivision(combo.getSelectedItem().toString()));
-        panel.add(combo);
-        tb.add(panel);
-        frame.add(tb);
-
-
 
         JPanel sortingPanel = new JPanel(new GridLayout(2, 3, 15, 15));
         sortingPanel.setBorder(BorderFactory.createTitledBorder("Sorting"));

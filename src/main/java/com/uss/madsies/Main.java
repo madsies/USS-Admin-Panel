@@ -1,189 +1,44 @@
 package com.uss.madsies;
 
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
-import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.Sheets;
-import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.*;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.List;
 
 public class Main {
-    private static final String APPLICATION_NAME = "Google Sheets API Java Quickstart";
-    private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-    private static final String TOKENS_DIRECTORY_PATH = "tokens";
-
-    /**
-     * Global instance of the scopes required by this quickstart.
-     * If modifying these scopes, delete your previously saved tokens/ folder.
-     */
-    private static final List<String> SCOPES =
-            Collections.singletonList(SheetsScopes.SPREADSHEETS);
-    private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
     static String ADMIN_SHEET;
     static String PUBLIC_SHEET = "1HRoTkeSpNUK4u2ft08EimauMcTNlndrIYl-gLZUy-8E";
     static Sheets service;
     static List<TeamData> teamsInfo;
-    static String DIVISION = "ONE";
     static List<MatchUp> matches;
 
-
-    public static void changeDivision(String division)
+    public static void main(String... args) throws IOException, GeneralSecurityException
     {
-        if (division.equalsIgnoreCase("one"))
-        {
-            DIVISION = "ONE";
-        }
-        else if (division.equalsIgnoreCase("two"))
-        {
-            DIVISION = "TWO";
-        }
-        else if (division.equalsIgnoreCase("three"))
-        {
-            DIVISION = "THREE";
-        }
-        else
-        {
-            DIVISION = "ONE";
-        }
+        // Build a new authorized API client service.
+        SheetsManagement.generateService();
+        ADMIN_SHEET = SheetsManagement.getAdminSheet();
+
+        getFullData(); // Initialises data into code
+
+        // Initialise GUI
+        SwingUtilities.invokeLater(() -> {
+            GUIView view  = new GUIView();
+            view.show();
+        });
 
     }
-    /**
-     * Creates an authorized Credential object.
-     *
-     * @param HTTP_TRANSPORT The network HTTP Transport.
-     * @return An authorized Credential object.
-     * @throws IOException If the credentials.json file cannot be found.
-     */
-    private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT)
-            throws IOException {
-        // Load client secrets.
-        InputStream in = Main.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
-        if (in == null) {
-            throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
-        }
-        GoogleClientSecrets clientSecrets =
-                GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
-        // Build flow and trigger user authorization request.
-        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-                HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
-                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
-                .setAccessType("offline")
-                .build();
-        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
-        return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
-    }
-
-    private static void getAdminSheet() throws IOException {
-        InputStream in = Main.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
-        if (in == null) {
-            throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
-        }
-
-        try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
-            ADMIN_SHEET = json.get("admin_sheet").getAsString();
-        }
-    }
-
-    public static void createNewSheet() throws IOException {
-        SheetProperties sheetProperties = new SheetProperties();
-        int num = getSheetNumber() + 1;
-        setSheetNumber(num);
-        sheetProperties.setTitle(DIVISION+"_Match_"+num);
-
-        // Wrap in an AddSheetRequest
-        AddSheetRequest addSheetRequest = new AddSheetRequest();
-        addSheetRequest.setProperties(sheetProperties);
-
-        // Wrap in a general Request
-        Request request = new Request();
-        request.setAddSheet(addSheetRequest);
-
-        // Send batchUpdate request
-        BatchUpdateSpreadsheetRequest batchUpdateRequest = new BatchUpdateSpreadsheetRequest();
-        batchUpdateRequest.setRequests(Collections.singletonList(request));
-
-        service.spreadsheets().batchUpdate(ADMIN_SHEET, batchUpdateRequest).execute();
-    }
-
-    public static void deleteSheet(String sheetName) throws IOException
-    {
-        Spreadsheet spreadsheet = service.spreadsheets().get(ADMIN_SHEET).execute();
-        Integer sheetId = null;
-        for (Sheet sheet : spreadsheet.getSheets())
-        {
-            if (sheet.getProperties().getTitle().equals(sheetName)) {
-                sheetId = sheet.getProperties().getSheetId();
-                break;
-            }
-        }
-        if (sheetId == null) {
-            System.out.println("Sheet not found: " + sheetName);
-            return;
-        }
-
-        // Create DeleteSheetRequest
-        DeleteSheetRequest deleteSheetRequest = new DeleteSheetRequest().setSheetId(sheetId);
-        Request request = new Request().setDeleteSheet(deleteSheetRequest);
-        List<Request> requests = new ArrayList<>();
-        requests.add(request);
-
-        BatchUpdateSpreadsheetRequest body = new BatchUpdateSpreadsheetRequest().setRequests(requests);
-
-        service.spreadsheets().batchUpdate(ADMIN_SHEET, body).execute();
-    }
-
-    public static int getSheetNumber() throws IOException
-    {
-        String range = DIVISION+"_Datasheet!Z1";
-        ValueRange response = service.spreadsheets().values()
-                .get(ADMIN_SHEET, range)
-                .execute();
-        List<List<Object>> values = response.getValues();
-        if (values == null || values.isEmpty()) {
-            System.out.println("No data found.");
-        }
-        else
-        {
-            return Integer.parseInt(values.getFirst().getFirst().toString());
-        }
-        return 0;
-    }
-
-    public static void setSheetNumber(int val) throws IOException {
-        String range = DIVISION+"_Datasheet!Z1";
-        List<List<Object>> values = new ArrayList<>();
-        values.add(List.of(val));
-        ValueRange body = new ValueRange().setValues(values);
-        service.spreadsheets().values().update(ADMIN_SHEET, range, body)
-                .setValueInputOption("USER_ENTERED")
-                .execute();
-
-    }
 
     public static void writeMatchupSheet(List<MatchUp> matches) throws IOException {
-        int num = getSheetNumber();
-        String range = DIVISION+"_Match_"+num+"!A1";
+        int num = SheetsManagement.getSheetNumber();
+        String range = "Match_"+num+"!A1";
         List<List<Object>> values = new ArrayList<>();
 
         // Headers for sheet (Readability)
@@ -205,7 +60,6 @@ public class Main {
         service.spreadsheets().values().update(ADMIN_SHEET, range, body)
                 .setValueInputOption("USER_ENTERED")
                 .execute();
-
     }
 
     /*
@@ -213,19 +67,10 @@ public class Main {
      */
     public static void updateRecords() throws IOException
     {
-        int num = getSheetNumber();
-        String range = DIVISION+"_Match_"+num+"!A2:D";
+        int num = SheetsManagement.getSheetNumber();
+        String range = "Match_"+num+"!A2:D";
 
-        ValueRange response = service.spreadsheets().values()
-                .get(ADMIN_SHEET, range)
-                .execute();
-
-        List<List<Object>> data = response.getValues();
-        if (data == null || data.isEmpty())
-        {
-            System.out.println("No match data found.");
-            return;
-        }
+        List<List<Object>> data = SheetsManagement.fetchData(ADMIN_SHEET, range);
 
         Map<String, TeamData> teamMap = new HashMap<>();
         for (TeamData t : teamsInfo)
@@ -285,25 +130,26 @@ public class Main {
         rewriteData();
     }
 
-
     // Do this when matches are needed to be generated
-    public static void generateRound() throws IOException {
+    public static void generateRound() throws IOException
+    {
         getFullData();
         matches = Matchmaker.createSwissMatchups(teamsInfo);
-        createNewSheet();
+        SheetsManagement.createNewSheet();
         writeMatchupSheet(matches);
     }
 
     public static void cancelRound() throws IOException
     {
         matches.clear();
-        int num = getSheetNumber();
-        deleteSheet(DIVISION+"_Match_"+num);
-        setSheetNumber(num-1);
+        int num = SheetsManagement.getSheetNumber();
+        SheetsManagement.deleteSheet("Match_"+num);
+        SheetsManagement.setSheetNumber(num-1);
     }
 
     // Do this when all data is filled and all matches are done
-    public static void endRound() throws IOException {
+    public static void endRound() throws IOException
+    {
         updateRecords();
         updateHistory(matches);
         updateOMWP();
@@ -315,7 +161,8 @@ public class Main {
         Writes necessary information to the public view sheet, ran at the end of each week
      */
 
-    public static void updatePublicStandings() throws IOException {
+    public static void updatePublicStandings() throws IOException
+    {
         sortTeams(false);
         List<List<Object>> sheetData = new ArrayList<>();
         //sheetData.add(Arrays.asList("Ranking", "Team", "Score", "Wins", "Losses", "OMWP"));
@@ -326,12 +173,7 @@ public class Main {
             i++;
         }
 
-        ValueRange body = new ValueRange().setValues(sheetData);
-        String range = "Standings!B5";
-        service.spreadsheets().values().update(PUBLIC_SHEET, range, body)
-                .setValueInputOption("USER_ENTERED")
-                .execute();
-
+        SheetsManagement.writeData(sheetData, PUBLIC_SHEET, "Standings!B5");
     }
 
     public static void copyRound()
@@ -370,12 +212,12 @@ public class Main {
         }
         try
         {
-            int num = getSheetNumber();
+            int num = SheetsManagement.getSheetNumber();
             for (int i = num; i > 0; i--)
             {
-                deleteSheet(DIVISION+"_Datasheet!Match_"+i);
+                SheetsManagement.deleteSheet("Datasheet!Match_"+i);
             }
-            setSheetNumber(0);
+            SheetsManagement.setSheetNumber(0);
             rewriteData();
         }
         catch (IOException e)
@@ -385,33 +227,14 @@ public class Main {
 
     }
 
-    public static void main(String... args) throws IOException, GeneralSecurityException {
-        // Build a new authorized API client service.
-        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-        Main.getAdminSheet();
-        service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
-                        .setApplicationName(APPLICATION_NAME)
-                        .build();
-
-        getFullData(); // Initialises data into code
-
-        SwingUtilities.invokeLater(() -> {
-            GUIView view  = new GUIView();
-            view.show();
-        });
-
-    }
-
-    public static void rewriteData() throws IOException {
+    public static void rewriteData() throws IOException
+    {
         List<List<Object>> sheetData = new ArrayList<>();
-        for (TeamData teamData : teamsInfo) {
+        for (TeamData teamData : teamsInfo)
+        {
             sheetData.add(teamData.convertToSpreadsheetRow());
         }
-        ValueRange body = new ValueRange().setValues(sheetData);
-        String range = DIVISION+"_Datasheet!A2:ZZ1000";
-        service.spreadsheets().values().update(ADMIN_SHEET, range, body)
-                .setValueInputOption("USER_ENTERED")
-                .execute();
+        SheetsManagement.writeData(sheetData, ADMIN_SHEET, "Datasheet!A2:ZZ");
     }
 
     public static void updateHistory(List<MatchUp> matches)
@@ -422,21 +245,12 @@ public class Main {
         }
     }
 
-    public static void copyMissingMatches() throws IOException {
+    public static void copyMissingMatches() throws IOException
+    {
         // Go through matches in current round, print names of teams of unfinished games
-        int num = getSheetNumber();
-        String range = DIVISION+"_Match_"+num+"!A2:D";
-
-        ValueRange response = service.spreadsheets().values()
-                .get(ADMIN_SHEET, range)
-                .execute();
-
-        List<List<Object>> data = response.getValues();
-        if (data == null || data.isEmpty())
-        {
-            System.out.println("No match data found.");
-            return;
-        }
+        int num = SheetsManagement.getSheetNumber();
+        String range = "Match_"+num+"!A2:D";
+        List<List<Object>> data = SheetsManagement.fetchData(ADMIN_SHEET, range);
 
         StringBuilder sb = new StringBuilder();
         sb.append("Matches without a score:\n");
@@ -516,35 +330,24 @@ public class Main {
 
     }
 
-    public static void listTeams()
-    {
-
-    }
-
     public static void addTeam(String name, int seeding)
     {
         TeamData data = new TeamData(name, seeding);
         teamsInfo.add(data);
     }
 
-    public static void getFullData() throws IOException {
-        String range = DIVISION+"_Datasheet!A2:ZZ1000";
-        ValueRange response = service.spreadsheets().values()
-                .get(ADMIN_SHEET, range)
-                .execute();
-        List<List<Object>> values = response.getValues();
-        if (values == null || values.isEmpty()) {
-            System.out.println("No data found.");
-        }
-        else
+    public static void getFullData() throws IOException
+    {
+        String range = "Datasheet!A2:ZZ";
+        List<List<Object>> sheetData = SheetsManagement.fetchData(ADMIN_SHEET, range);
+
+        List<TeamData> data = new ArrayList<>();
+        for (List<Object> row : sheetData)
         {
-            List<TeamData> data = new ArrayList<>();
-            for (List<Object> row : values)
-            {
-               data.add(new TeamData(row));
-            }
-            teamsInfo = data;
+            System.out.println(row);
+            data.add(new TeamData(row));
         }
+        teamsInfo = data;
     }
 
     public static void sortTeams(boolean seeding)
@@ -564,6 +367,5 @@ public class Main {
             teamsInfo.sort(Comparator.comparingInt(o -> o.seeding));
             teamsInfo = teamsInfo.reversed();
         }
-
     }
 }
