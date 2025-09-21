@@ -140,11 +140,20 @@ public class SheetsManagement
         writeData(values, ADMIN_SHEET, range);
     }
 
-    public static List<List<Object>> fetchData(String SHEET, String range) throws IOException
+    public static List<List<Object>> fetchData(String SHEET, String range)
     {
-        ValueRange response = service.spreadsheets().values()
-                .get(SHEET, range)
-                .execute();
+        ValueRange response;
+        try {
+            response = service.spreadsheets().values()
+                    .get(SHEET, range)
+                    .execute();
+        }
+        catch (IOException e)
+        {
+            System.out.println(e.getMessage());
+            response = new ValueRange();
+        }
+
 
         List<List<Object>> data = response.getValues();
         if (data == null || data.isEmpty())
@@ -155,12 +164,33 @@ public class SheetsManagement
         return data;
     }
 
-    public static void writeData(List<List<Object>> inputData, String SHEET, String range) throws IOException
+    public static void writeData(List<List<Object>> inputData, String SHEET, String range)
     {
         ValueRange body = new ValueRange().setValues(inputData);
-        service.spreadsheets().values().update(SHEET, range, body)
-                .setValueInputOption("USER_ENTERED")
-                .execute();
+        try
+        {
+            service.spreadsheets().values().update(SHEET, range, body)
+                    .setValueInputOption("USER_ENTERED")
+                    .execute();
+        }
+        catch (IOException e)
+        {
+            System.out.println(e.getMessage());
+        }
 
+    }
+
+    public static void clearData(String range) {
+        ClearValuesRequest requestBody = new ClearValuesRequest();
+
+        try {
+            Sheets.Spreadsheets.Values.Clear request =
+                    service.spreadsheets().values().clear(ADMIN_SHEET, range, requestBody);
+
+            ClearValuesResponse response = request.execute();
+        } catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -56,7 +56,11 @@ public class GUIView
                     JOptionPane.YES_NO_OPTION, // options
                     JOptionPane.WARNING_MESSAGE // icon
             );
-            if (result == JOptionPane.YES_OPTION) Main.wipeData();}
+            if (result == JOptionPane.YES_OPTION)
+            {
+                Main.wipeData();
+                Main.addSeedAndCreateTeams();
+            }}
             );
 
         JButton setAllCheckIn = new JButton("Set All Check In");

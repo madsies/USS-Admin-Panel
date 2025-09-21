@@ -19,7 +19,7 @@ public class SeedingTools
     public static List<Integer> sortByRank(List<Integer> data)
     {
         data.sort(Integer::compareTo);
-        return data = data.reversed();
+        return data.reversed();
     }
 
     /**
@@ -33,7 +33,8 @@ public class SeedingTools
     public static float calculateWeightedSeed(List<Integer> data)
     {
         data = sortByRank(data);
-        float weightedScore = (float) Math.floor(data.get(0)*1.5f + data.get(1) * 1.3f + data.get(2) * 1.1f + data.get(3)+data.get(4));
+        float weightedScore = (float) Math.floor
+                (data.get(0)*1.5f + data.get(1) * 1.3f + data.get(2) * 1.1f + data.get(3)+data.get(4));
 
         return weightedScore / 5.9f;
     }

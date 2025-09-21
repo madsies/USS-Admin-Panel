@@ -1,8 +1,5 @@
 package com.uss.madsies;
 
-import com.google.api.services.sheets.v4.Sheets;
-import com.google.api.services.sheets.v4.model.*;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
@@ -27,14 +24,11 @@ public class Main {
 
         getFullData(); // Initialises data into code
 
-        addSeedAndCreateTeams();
-
         // Initialise GUI
         SwingUtilities.invokeLater(() -> {
             GUIView view  = new GUIView();
             view.show();
         });
-
     }
 
     /**
@@ -196,13 +190,8 @@ public class Main {
 
     public static void copyNonCheckedIn()
     {
-        try {
-            getFullData(); // Load full data (may have been un-ticked since last check)
-        }
-        catch (IOException e)
-        {
-            System.out.println(e.getMessage());
-        }
+        getFullData(); // Load full data (may have been un-ticked since last check)
+
         StringBuilder sb = new StringBuilder();
         sb.append("Teams that have not Checked in:\n");
         for (TeamData t : teamsInfo)
@@ -222,14 +211,16 @@ public class Main {
         {
             t.Clear();
         }
+        teamsInfo.clear();
         try
         {
             int num = SheetsManagement.getSheetNumber();
             for (int i = num; i > 0; i--)
             {
-                SheetsManagement.deleteSheet("Datasheet!Match_"+i);
+                SheetsManagement.deleteSheet("Match_"+i);
             }
             SheetsManagement.setSheetNumber(0);
+            SheetsManagement.clearData("Datasheet!A2:Y");
             rewriteData();
         }
         catch (IOException e)
@@ -239,14 +230,15 @@ public class Main {
 
     }
 
-    public static void rewriteData() throws IOException
+    public static void rewriteData()
     {
         List<List<Object>> sheetData = new ArrayList<>();
         for (TeamData teamData : teamsInfo)
         {
             sheetData.add(teamData.convertToSpreadsheetRow());
         }
-        SheetsManagement.writeData(sheetData, ADMIN_SHEET, "Datasheet!A2:ZZ");
+        if (teamsInfo.isEmpty()) sheetData.add(new ArrayList<>(List.of("")));
+        SheetsManagement.writeData(sheetData, ADMIN_SHEET, "Datasheet!A2:Y");
     }
 
     public static void updateHistory(List<MatchUp> matches)
@@ -257,8 +249,7 @@ public class Main {
         }
     }
 
-    public static void copyMissingMatches() throws IOException
-    {
+    public static void copyMissingMatches() throws IOException {
         // Go through matches in current round, print names of teams of unfinished games
         int num = SheetsManagement.getSheetNumber();
         String range = "Match_"+num+"!A2:D";
@@ -331,14 +322,9 @@ public class Main {
         {
             team.checkedIn = in;
         }
-        try
-        {
-            rewriteData();
-        }
-        catch (IOException e)
-        {
-            System.out.println(e.getMessage());
-        }
+
+        rewriteData();
+
 
     }
 
@@ -348,7 +334,7 @@ public class Main {
         teamsInfo.add(data);
     }
 
-    public static void getFullData() throws IOException
+    public static void getFullData()
     {
         String range = "Datasheet!A2:ZZ";
         List<List<Object>> sheetData = SheetsManagement.fetchData(ADMIN_SHEET, range);
@@ -381,7 +367,7 @@ public class Main {
         }
     }
 
-    public static void addSeedAndCreateTeams() throws IOException
+    public static void addSeedAndCreateTeams()
     {
         HashMap<String, Double> rankings = calculateSeedingRanks();
         for (Map.Entry<String, Double> entry : rankings.entrySet())
@@ -393,7 +379,7 @@ public class Main {
         rewriteData();
     }
 
-    public static HashMap<String, Double> calculateSeedingRanks() throws IOException
+    public static HashMap<String, Double> calculateSeedingRanks()
     {
         getFullData();
         List<List<Object>> seedData = SheetsManagement.fetchData(ADMIN_SHEET, "Seeding!A1:G");
