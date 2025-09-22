@@ -27,7 +27,7 @@ public class SeedingTools
     /**
         Intakes array of ranks, and gives it a seeding rank
 
-        Highest rank *1.5, *1.3, *1.1 and base for others
+        Highest rank *2.0, *1.5, *1.25 and base for others
 
         @param data The array of player ranks to convert
         @return The teams calculated seeding score
@@ -36,9 +36,9 @@ public class SeedingTools
     {
         data = sortByRank(data);
         float weightedScore = (float) Math.floor
-                (data.get(0)*1.5f + data.get(1) * 1.3f + data.get(2) * 1.1f + data.get(3)+data.get(4));
+                (data.get(0)*2.0f + data.get(1) * 1.5f + data.get(2) * 1.25f + data.get(3)+data.get(4));
 
-        return weightedScore / 5.9f;
+        return weightedScore / 6.75f;
     }
 
     /**
