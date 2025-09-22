@@ -11,15 +11,15 @@ import java.util.List;
 
 public class TeamData
 {
-    String teamName;
-    double seeding;
-    boolean checkedIn;
-    int score; // Wins * 3
-    int wins;
-    int losses;
-    int map_wins;
-    int map_losses;
-    float omwp;
+    public String teamName;
+    public double seeding;
+    public boolean checkedIn;
+    public int score; // Wins * 3
+    public int wins;
+    public int losses;
+    public int map_wins;
+    public int map_losses;
+    public float omwp;
     List<String> history;
 
     /*
@@ -53,6 +53,22 @@ public class TeamData
         this.teamName = teamName;
         this.seeding = seeding;
         checkedIn = false;
+        score = 0;
+        wins = 0;
+        losses = 0;
+        map_wins = 0;
+        map_losses = 0;
+        omwp = 0;
+        history = new ArrayList<>();
+    }
+    /*
+        For testing
+     */
+    public TeamData(String teamName, double seeding, boolean checkedIn)
+    {
+        this.teamName = teamName;
+        this.seeding = seeding;
+        this.checkedIn = checkedIn;
         score = 0;
         wins = 0;
         losses = 0;
@@ -99,4 +115,15 @@ public class TeamData
         this.wins += count;
         this.score += count*3;
     }
+
+    public void setCheckedIn(boolean ci)
+    {
+        checkedIn = ci;
+    }
+
+    public String getName()
+    {
+        return teamName;
+    }
+
  }
