@@ -80,7 +80,7 @@ public class TeamData
 
     public List<Object> convertToSpreadsheetRow()
     {
-        List<Object> row = new ArrayList<Object>();
+        List<Object> row = new ArrayList<>();
         row.add(teamName);
         row.add(seeding);
         row.add(checkedIn);

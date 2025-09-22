@@ -105,10 +105,10 @@ public class Main {
                 continue;
             }
             else if (scoreA > scoreB) {
-                teamMap.get(teamA).addWins(1);;
+                teamMap.get(teamA).addWins(1);
                 teamMap.get(teamB).losses++;
             } else if (scoreB > scoreA) {
-                teamMap.get(teamB).addWins(1);;
+                teamMap.get(teamB).addWins(1);
                 teamMap.get(teamA).losses++;
             }
             teamMap.get(teamA).map_wins += scoreA;
@@ -350,12 +350,6 @@ public class Main {
         rewriteData();
 
 
-    }
-
-    public static void addTeam(String name, int seeding)
-    {
-        TeamData data = new TeamData(name, seeding);
-        teamsInfo.add(data);
     }
 
     public static void getFullData()

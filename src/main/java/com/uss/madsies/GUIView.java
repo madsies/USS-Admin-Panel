@@ -7,8 +7,6 @@ import java.io.IOException;
 public class GUIView
 {
     private final JFrame frame;
-    private final JButton sortSeeding;
-    private final JButton generateMatches;
     private final JButton cancelMatches;
     public JButton endMatches;
     public JButton updatePublicBoard;
@@ -39,7 +37,7 @@ public class GUIView
         JPanel sortingPanel = new JPanel(new GridLayout(2, 3, 15, 15));
         sortingPanel.setBorder(BorderFactory.createTitledBorder("Sorting"));
 
-        sortSeeding = new JButton("Rank by Seed");
+        JButton sortSeeding = new JButton("Rank by Seed");
         sortSeeding.addActionListener(_ -> {
             try {
                 Main.genericSetup();
@@ -74,10 +72,10 @@ public class GUIView
             );
 
         JButton setAllCheckIn = new JButton("Set All Check In");
-        setAllCheckIn.addActionListener(_ -> {Main.checkAllTeams(true);});
+        setAllCheckIn.addActionListener(_ -> Main.checkAllTeams(true));
 
         JButton setAllCheckOut = new JButton("Set All Check Out");
-        setAllCheckOut.addActionListener(_ -> {Main.checkAllTeams(false);});
+        setAllCheckOut.addActionListener(_ -> Main.checkAllTeams(false));
 
         sortingPanel.add(sortSeeding);
         sortingPanel.add(sortPlacement);
@@ -87,7 +85,7 @@ public class GUIView
 
         cancelMatches = new JButton("Cancel Matches");
         endMatches = new JButton("End Matches");
-        generateMatches = new JButton("Generate Matches");
+        JButton generateMatches = new JButton("Generate Matches");
         JButton copyMatches = new JButton("Copy Matches to Clipboard");
         JButton copyUnfinished = new JButton("Copy Unfinished Matches to Clipboard");
         copyMatches.addActionListener(_ -> {Main.copyRound();JOptionPane.showMessageDialog(frame, "Copied to clipboard");});
@@ -184,9 +182,7 @@ public class GUIView
         matchPanel.add(copyUnfinished);
 
         updatePublicBoard = new JButton("Update Public Sheet");
-        updatePublicBoard.addActionListener(_ -> {
-            Main.updatePublicStandings();
-        });
+        updatePublicBoard.addActionListener(_ -> Main.updatePublicStandings());
 
         JButton copyUnreadyTeams = new JButton("Copy List of non-checked in teams");
         copyUnreadyTeams.addActionListener(_ ->

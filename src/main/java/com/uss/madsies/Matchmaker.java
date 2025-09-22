@@ -9,13 +9,13 @@ public class Matchmaker {
         // If odd number in pool, downfloat the weakest to the lower class
         // If odd in total, give a bye to the highest team in the lowest class
 
-        @param sheetData Raw sheet data from google sheets
+        @param sheetData Raw sheet data from Google sheets
         @return List of Matchup objects for optimal matches
      */
 
     public static List<MatchUp> createSwissMatchups(List<TeamData> teamData) {
 
-        List<MatchUp> matchups = new ArrayList<MatchUp>();
+        List<MatchUp> matchups = new ArrayList<>();
         List<TeamData> currentPool = new ArrayList<>();
         int poolSize = 0;
         int bracketWins = -1;

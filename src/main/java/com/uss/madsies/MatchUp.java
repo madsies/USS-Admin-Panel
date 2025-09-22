@@ -9,8 +9,6 @@ public class MatchUp
     }
     public TeamData team1;
     public TeamData team2;
-    public int scoreTeam1;
-    public int scoreTeam2;
 
     @Override
     public String toString()

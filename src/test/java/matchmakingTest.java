@@ -10,7 +10,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-public class Matchmaking_Test
+public class matchmakingTest
 {
 
     List<TeamData> TEAMS_ALL = Arrays.asList(

@@ -39,7 +39,7 @@ public class SeedingTools
         return weightedScore / 6.75f;
     }
 
-    /**
+    /*
      *  Tiebreaker for teams that have equal seeding score
      *  The team with the highest ranked 1st player is chosen, if a tie, 2nd player
      *  If all players have identical ranks, the 1st team is chosen in tiebreak.
@@ -47,7 +47,7 @@ public class SeedingTools
      * @param team1 First team in comparison
      * @param team2 Team to compare to
      * @return If the left team should be higher seed
-     */
+
 
     public static boolean seedTiebreaker(List<Integer> team1, List<Integer> team2)
     {
@@ -61,6 +61,8 @@ public class SeedingTools
         }
         return true;
     }
+    */
+
 
     /**
      *  Returns a list of cutoffs of teams that gain seeding points
@@ -79,7 +81,7 @@ public class SeedingTools
 
     public static List<Integer> calcSeedingThreshold_light(int teamCount)
     {
-        List<Integer> thresholds = new ArrayList<Integer>();
+        List<Integer> thresholds = new ArrayList<>();
         thresholds.add((int) Math.ceil(HIGH_THRESHOLD_PERCENT /100 * teamCount));
         thresholds.add((int) Math.ceil(MID_THRESHOLD_PERCENT /100 * teamCount));
         return thresholds;

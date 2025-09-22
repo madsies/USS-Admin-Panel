@@ -159,7 +159,7 @@ public class SheetsManagement
         if (data == null || data.isEmpty())
         {
             System.out.println("No match data found.");
-            return Collections.singletonList(new ArrayList<Object>());
+            return Collections.singletonList(new ArrayList<>());
         }
         return data;
     }
@@ -187,7 +187,7 @@ public class SheetsManagement
             Sheets.Spreadsheets.Values.Clear request =
                     service.spreadsheets().values().clear(ADMIN_SHEET, range, requestBody);
 
-            ClearValuesResponse response = request.execute();
+            request.execute();
         } catch (Exception e)
         {
             throw new RuntimeException(e);
