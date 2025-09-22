@@ -14,7 +14,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 class MyBot(commands.Bot):
     async def on_ready(self):

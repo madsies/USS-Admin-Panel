@@ -3,8 +3,6 @@ package com.uss.madsies;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.uss.madsies.SheetsManagement.getSheetNumber;
-
 public class SeedingTools
 {
     public static final double HIGH_THRESHOLD_PERCENT = 15;

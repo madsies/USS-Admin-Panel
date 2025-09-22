@@ -1,8 +1,5 @@
 package com.uss.madsies;
 
-
-import org.w3c.dom.Text;
-
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
