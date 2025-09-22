@@ -44,11 +44,13 @@ class SheetsManagement():
             creds = Credentials.from_authorized_user_file("token.json", SCOPES)
 
         if not creds or not creds.valid:
+
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
                 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
                 CREDS_DIR = os.path.join(BASE_DIR, "credentials.json")
+
                 flow = InstalledAppFlow.from_client_secrets_file(
                     CREDS_DIR, SCOPES
                 )
@@ -86,7 +88,6 @@ class SheetsManagement():
 
         return result.get("values", [])
 
-
 def main():
     INTENTS = discord.Intents.default()
     INTENTS.message_content = True
@@ -95,11 +96,6 @@ def main():
     client = MyBot(command_prefix='!', intents=INTENTS)
     
     client.run(os.environ.get('DISCORD_BOT_TOKEN'))
-
-   
-    
-
-    
 
 if __name__ == "__main__":
     main()

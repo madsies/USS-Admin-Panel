@@ -11,14 +11,14 @@ sys.path.append(str(parent_dir))
 from bot import SheetsManagement
 
 USS_COLOUR = 0x992299
+ADMIN_ROLE_NAME = "admin"
 
 def is_admin():
     async def predicate(ctx):
-        return any(role.name.lower() == "admin" for role in ctx.author.roles)
+        return any(role.name.lower() == ADMIN_ROLE_NAME for role in ctx.author.roles)
     return commands.check(predicate)
 
 class CheckInCommands(commands.Cog):
-    
     def __init__(self, bot):
         self.manager = SheetsManagement()
         self.teamsMapped = {}
@@ -93,13 +93,11 @@ class CheckInCommands(commands.Cog):
             await ctx.reply("Check-in is open")
         else:
             await ctx.reply("Check-in is closed")
-
     
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CheckFailure):
             await ctx.reply("You need the **admin** role to use this command.")
-
 
     def sync_team_data(self):
         self.teamsMapped.clear()
@@ -146,11 +144,6 @@ class CheckInCommands(commands.Cog):
         if isinstance(value, str):
             return value.strip().upper() == "TRUE"
         return bool(value) 
-
-
-        
-        
-
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(CheckInCommands(bot))
