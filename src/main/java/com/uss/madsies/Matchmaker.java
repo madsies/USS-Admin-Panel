@@ -16,22 +16,26 @@ public class Matchmaker {
     public static List<MatchUp> createSwissMatchups(List<TeamData> teamData) {
 
         List<MatchUp> matchups = new ArrayList<MatchUp>();
-        List<String> currentPool = new ArrayList<>();
+        List<TeamData> currentPool = new ArrayList<>();
         int poolSize = 0;
         int bracketWins = -1;
 
-        for (TeamData team : teamData) {
+        for (TeamData team : teamData)
+        {
             if (!team.checkedIn) continue;
+            System.out.println(poolSize);
             if (bracketWins == -1) bracketWins = team.wins;
 
             if (bracketWins == team.wins)
             {
                 poolSize++;
-                currentPool.add(team.teamName);
-            } else
+                currentPool.add(team);
+            }
+            else
             {
-                String downFloat = "";
-                if (poolSize % 2 != 0) {
+                TeamData downFloat = null;
+                if (poolSize % 2 != 0)
+                {
                     downFloat = currentPool.getLast();
                     currentPool.removeLast();
                     poolSize--;
@@ -48,31 +52,31 @@ public class Matchmaker {
                 currentPool.clear();
                 poolSize = 0;
 
-                if (!Objects.equals(downFloat, "")) {
+                if (!Objects.equals(downFloat, null)) {
                     currentPool.add(downFloat);
                     poolSize++;
                     bracketWins--;
                 }
-                currentPool.add(team.teamName);
+                currentPool.add(team);
                 poolSize++;
             }
         }
 
-        System.out.println("Pool size: " + poolSize);
         if (poolSize % 2 != 0) {
-            currentPool.add("BYE");
+            currentPool.add(new TeamData("BYE", -1));
             poolSize++;
         }
-        for (int i = 0; i < poolSize / 2; i++) {
+        for (int i = 0; i < poolSize / 2; i++)
+        {
             matchups.add(new MatchUp(currentPool.get(i), currentPool.get(poolSize - 1 - i)));
         }
         currentPool.clear();
 
 
-        for (MatchUp matchup : matchups) {
+        for (MatchUp matchup : matchups)
+        {
             System.out.println(matchup.toString());
         }
-
 
         return matchups;
     }
@@ -80,7 +84,8 @@ public class Matchmaker {
     public static String getMatchupsString(List<MatchUp> matchups)
     {
         StringBuilder sb = new StringBuilder();
-        for (MatchUp match : matchups) {
+        for (MatchUp match : matchups)
+        {
             sb.append(match.toString()).append("\n");
         }
         return sb.toString();

@@ -1,0 +1,33 @@
+import discord
+from discord.ext import commands
+
+class CheckInCommands(commands.Cog):
+    def __init__(self):
+        return
+    
+    @commands.hybrid_command(name="CheckIn")
+    async def check_in(self, ctx):
+        sender : discord.Member = ctx.author
+
+        # Check database if username is in list
+        # if username in list
+        #    if team checked in
+        #       send "team already checked in"
+        #    else
+        #       check team in
+        #else
+        #    say you arent a captain
+
+
+    @commands.hybrid_command(name="CheckOut")
+    async def check_out(self, ctx)
+        sender : discord.Member = ctx.author
+
+        # Check database if username is in list
+        # if username in list
+        #    if team checked out
+        #       send "team already checked out"
+        #    else
+        #       check team out
+        #else
+        #    say you arent a captain

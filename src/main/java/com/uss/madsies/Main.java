@@ -22,11 +22,12 @@ public class Main {
         // Build a new authorized API client service.
         SheetsManagement.generateService();
         ADMIN_SHEET = SheetsManagement.getAdminSheet();
+
+        getFullData();
+
         isCurrentMatch = SheetsManagement.readMatchFlag();
         if (isCurrentMatch) loadCurrentMatch();
 
-
-        getFullData(); // Initialises data into code
 
         // Initialise GUI
         SwingUtilities.invokeLater(() -> {
@@ -56,10 +57,10 @@ public class Main {
             // Auto filling in bye scores
             int scoreA = 0;
             int scoreB = 0;
-            if (match.team1.equals("BYE")) scoreB = 2;
-            if (match.team2.equals("BYE")) scoreA = 2;
+            if (match.team1.teamName.equals("BYE")) scoreB = 2;
+            if (match.team2.teamName.equals("BYE")) scoreA = 2;
 
-            values.add(Arrays.asList(match.team1, match.team2, scoreA, scoreB));
+            values.add(Arrays.asList(match.team1.teamName, match.team2.teamName, scoreA, scoreB));
         }
 
         SheetsManagement.writeData(values, ADMIN_SHEET, range);
@@ -267,8 +268,8 @@ public class Main {
     public static void updateHistory(List<MatchUp> matches)
     {
         for (MatchUp m : matches) {
-            addOpponent(m.team1, m.team2);
-            addOpponent(m.team2, m.team1);
+            addOpponent(m.team1.teamName, m.team2.teamName);
+            addOpponent(m.team2.teamName, m.team1.teamName);
         }
     }
 
@@ -451,6 +452,19 @@ public class Main {
         }
     }
 
+    public static TeamData getTeamFromName(String name)
+    {
+        for (TeamData team : teamsInfo) {
+            if (team.teamName.equals(name)) return team;
+
+        }
+        throw new RuntimeException();
+    }
+
+    /**
+     * Loads the current round if the client is closed whilst a round is in progress
+     */
+
     public static void loadCurrentMatch()
     {
         try {
@@ -458,7 +472,17 @@ public class Main {
             List<List<Object>> data = SheetsManagement.fetchData(ADMIN_SHEET, "Match_" + num + "!A1:D");
 
             for (List<Object> row : data) {
-                matches.add(new MatchUp(row.get(0).toString(), row.get(3).toString()));
+                if (Objects.equals(row.get(0).toString(), "BYE"))
+                {
+                    matches.add(new MatchUp(new TeamData("BYE", -1), getTeamFromName(row.get(3).toString())));
+                }
+                else if (Objects.equals(row.get(3).toString(), "BYE"))
+                {
+                    matches.add(new MatchUp(getTeamFromName(row.getFirst().toString()), new TeamData("BYE", -1)));
+                } else
+                {
+                    matches.add(new MatchUp(getTeamFromName(row.get(0).toString()), getTeamFromName(row.get(3).toString())));
+                }
             }
         }
         catch (Exception e)
