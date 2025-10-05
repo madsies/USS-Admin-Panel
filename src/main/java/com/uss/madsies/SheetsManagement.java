@@ -37,7 +37,7 @@ public class SheetsManagement
 
     public static void generateService() throws GeneralSecurityException, IOException {
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-        service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
+        service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentialsRefresh(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
     }
@@ -62,6 +62,34 @@ public class SheetsManagement
         LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
         ADMIN_SHEET = getAdminSheet();
         return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
+    }
+
+    private static Credential getCredentialsRefresh(final NetHttpTransport HTTP_TRANSPORT)
+            throws IOException {
+        Credential credential = getCredentials(HTTP_TRANSPORT);
+
+        // Attempt to refresh token if expired
+        if (credential.getExpiresInSeconds() != null && credential.getExpiresInSeconds() <= 60) {
+            boolean success = credential.refreshToken();
+            if (!success) {
+                System.out.println("Token expired or revoked. Please reauthorize:");
+                credential = new AuthorizationCodeInstalledApp(
+                        new GoogleAuthorizationCodeFlow.Builder(
+                                HTTP_TRANSPORT, JSON_FACTORY,
+                                GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(
+                                        Main.class.getResourceAsStream(CREDENTIALS_FILE_PATH))),
+                                SCOPES)
+                                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
+                                .setAccessType("offline")
+                                .build(),
+                        new LocalServerReceiver.Builder().setPort(8888).build()
+                ).authorize("user");
+            } else {
+                System.out.println("Token successfully refreshed.");
+            }
+        }
+
+        return credential;
     }
 
     static String getAdminSheet() throws IOException
@@ -197,6 +225,8 @@ public class SheetsManagement
     public static boolean readMatchFlag()
     {
         List<List<Object>> data = fetchData(ADMIN_SHEET, "Datasheet!Y1");
+        if (data.isEmpty()) return false;
+        if (data.getFirst().isEmpty()) return false;
         return Boolean.parseBoolean(data.getFirst().getFirst().toString());
     }
 

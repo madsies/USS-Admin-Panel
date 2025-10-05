@@ -408,6 +408,7 @@ public class Main {
         for (List<Object> row : seedData)
         {
             String name = row.getFirst().toString();
+            if (name.isEmpty()) continue;
             ArrayList<Integer> ranks = (ArrayList<Integer>) new ArrayList<>(row.subList(2, row.size()))
                     .stream().map(o -> Integer.parseInt(o.toString())).collect(Collectors.toList());
             double rating = SeedingTools.calculateWeightedSeed(ranks);

@@ -36,7 +36,7 @@ public class Matchmaker {
                 TeamData downFloat = null;
                 if (poolSize % 2 != 0)
                 {
-                    downFloat = currentPool.getLast();
+                    downFloat = currentPool.getLast();  // Downfloat team choice
                     currentPool.removeLast();
                     poolSize--;
                 }
