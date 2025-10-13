@@ -11,12 +11,12 @@ repositories {
     mavenCentral()
 }
 
-/*
+
 compileJava {
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
 }
- */
+
 
 application {
     mainClass = "com.uss.madsies.Main"

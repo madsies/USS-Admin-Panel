@@ -29,7 +29,7 @@ public class GUIView
         errorText.setEditable(false);
 
         Image icon = Toolkit.getDefaultToolkit().getImage(
-                GUIView.class.getResource("/images/USS.png")
+                GUIView.class.getResource("/images/USS.jpg")
         );
 
         frame.setIconImage(icon);
@@ -38,7 +38,7 @@ public class GUIView
         sortingPanel.setBorder(BorderFactory.createTitledBorder("Sorting"));
 
         JButton sortSeeding = new JButton("Rank by Seed");
-        sortSeeding.addActionListener(_ -> {
+        sortSeeding.addActionListener(a -> {
             try {
                 Main.genericSetup();
             } catch (IOException ex) {
@@ -47,7 +47,7 @@ public class GUIView
         });
 
         JButton sortPlacement = new JButton("Fix Rankings");
-        sortPlacement.addActionListener(_ -> {
+        sortPlacement.addActionListener(a -> {
             try {
                 Main.fixStandings();
             } catch (IOException e) {
@@ -56,7 +56,7 @@ public class GUIView
         });
 
         JButton reset = new JButton("Reset Datasheet");
-        reset.addActionListener(_ -> {
+        reset.addActionListener(a -> {
             int result = JOptionPane.showConfirmDialog(
                     frame,                     // parent component
                     "Are you sure you want to reset the sheet data?", // message
@@ -72,10 +72,10 @@ public class GUIView
             );
 
         JButton setAllCheckIn = new JButton("Set All Check In");
-        setAllCheckIn.addActionListener(_ -> Main.checkAllTeams(true));
+        setAllCheckIn.addActionListener(a -> Main.checkAllTeams(true));
 
         JButton setAllCheckOut = new JButton("Set All Check Out");
-        setAllCheckOut.addActionListener(_ -> Main.checkAllTeams(false));
+        setAllCheckOut.addActionListener(a -> Main.checkAllTeams(false));
 
         sortingPanel.add(sortSeeding);
         sortingPanel.add(sortPlacement);
@@ -88,8 +88,8 @@ public class GUIView
         JButton generateMatches = new JButton("Generate Matches");
         JButton copyMatches = new JButton("Copy Matches to Clipboard");
         JButton copyUnfinished = new JButton("Copy Unfinished Matches to Clipboard");
-        copyMatches.addActionListener(_ -> {Main.copyRound();JOptionPane.showMessageDialog(frame, "Copied to clipboard");});
-        generateMatches.addActionListener(_ -> {
+        copyMatches.addActionListener(a -> {Main.copyRound();JOptionPane.showMessageDialog(frame, "Copied to clipboard");});
+        generateMatches.addActionListener(a -> {
             try {
                 Main.generateRound();
                 endMatches.setVisible(true);
@@ -104,7 +104,7 @@ public class GUIView
             }
         });
 
-        copyUnfinished.addActionListener(_ -> {
+        copyUnfinished.addActionListener(a -> {
                 try {
                     Main.copyMissingMatches();
                     JOptionPane.showMessageDialog(frame, "Copied to clipboard");
@@ -115,7 +115,7 @@ public class GUIView
 
 
 
-        endMatches.addActionListener(_ -> {
+        endMatches.addActionListener(a -> {
         int result = JOptionPane.showConfirmDialog(
                 frame,                     // parent component
                 "Are you sure all scores have been submitted?", // message
@@ -137,7 +137,7 @@ public class GUIView
         }
          });
 
-        cancelMatches.addActionListener(_ -> {
+        cancelMatches.addActionListener(a -> {
             int result = JOptionPane.showConfirmDialog(
                     frame,                     // parent component
                     "Are you sure you want to cancel the round?", // message
@@ -182,10 +182,10 @@ public class GUIView
         matchPanel.add(copyUnfinished);
 
         updatePublicBoard = new JButton("Update Public Sheet");
-        updatePublicBoard.addActionListener(_ -> Main.updatePublicStandings());
+        updatePublicBoard.addActionListener(a -> Main.updatePublicStandings());
 
         JButton copyUnreadyTeams = new JButton("Copy List of non-checked in teams");
-        copyUnreadyTeams.addActionListener(_ ->
+        copyUnreadyTeams.addActionListener(a ->
         {Main.copyNonCheckedIn();JOptionPane.showMessageDialog(frame, "Copied to clipboard");});
 
         JPanel publicPanel = new JPanel(new GridLayout(1,2,15,15));
