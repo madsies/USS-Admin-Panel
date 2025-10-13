@@ -16,6 +16,7 @@ public class Main {
     static List<TeamData> teamsInfo = new ArrayList<>();
     static List<MatchUp> matches = new ArrayList<>();
     static boolean isCurrentMatch = false;
+    static HashMap<String, List<Integer>> teamPlayers = new HashMap<>();
 
     public static void main(String... args) throws IOException, GeneralSecurityException
     {
@@ -357,11 +358,13 @@ public class Main {
         String range = "Datasheet!A2:ZZ";
         List<List<Object>> sheetData = SheetsManagement.fetchData(ADMIN_SHEET, range);
 
+        updateTeamPlayers();
+
         List<TeamData> data = new ArrayList<>();
         for (List<Object> row : sheetData)
         {
             if (row.isEmpty()) return;
-            data.add(new TeamData(row));
+            data.add(new TeamData(row){{players=teamPlayers.get(row.getFirst());}});
         }
         teamsInfo = data;
     }
@@ -380,6 +383,7 @@ public class Main {
                     .thenComparingDouble((TeamData t) -> t.seeding).reversed());
         }
         else {
+            updateTeamPlayers();
             teamsInfo.sort(
                     Comparator.comparingDouble((TeamData t) -> t.seeding)
                             .reversed()
@@ -393,16 +397,8 @@ public class Main {
     {
         HashMap<String, Double> rankings = calculateSeedingRanks();
 
-        HashMap<String, List<Integer>> teamPlayers = new HashMap<>();
-        List<List<Object>> seedData = SheetsManagement.fetchData(ADMIN_SHEET, "Seeding!A1:G");
+        updateTeamPlayers();
 
-        for (List<Object> row : seedData) {
-            if (row.isEmpty()) continue;
-            String name = row.getFirst().toString();
-            if (name.isEmpty()) continue;
-            teamPlayers.put(name, new ArrayList<>(row.subList(2, row.size()))
-                    .stream().map(o -> Integer.parseInt(o.toString())).collect(Collectors.toList()));
-        }
         for (Map.Entry<String, Double> entry : rankings.entrySet())
         {
             teamsInfo.add(new TeamData(entry.getKey(), entry.getValue()){{players=teamPlayers.get(entry.getKey());}});
@@ -437,6 +433,20 @@ public class Main {
         SheetsManagement.writeData(rawRankings, ADMIN_SHEET, "Seeding!I1");
 
         return rankings;
+    }
+
+    public static void updateTeamPlayers()
+    {
+        teamPlayers = new HashMap<>();
+        List<List<Object>> seedData = SheetsManagement.fetchData(ADMIN_SHEET, "Seeding!A1:G");
+
+        for (List<Object> row : seedData) {
+            if (row.isEmpty()) continue;
+            String name = row.getFirst().toString();
+            if (name.isEmpty()) continue;
+            teamPlayers.put(name, new ArrayList<>(row.subList(2, row.size()))
+                    .stream().map(o -> Integer.parseInt(o.toString())).collect(Collectors.toList()));
+        }
     }
 
     public static void grantSeedingWins()
