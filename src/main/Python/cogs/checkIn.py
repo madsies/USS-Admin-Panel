@@ -11,11 +11,12 @@ sys.path.append(str(parent_dir))
 from bot import SheetsManagement
 
 USS_COLOUR = 0x992299
-ADMIN_ROLE_NAME = "admin"
+ADMIN_ROLE_NAME = "ow admin"
+LEAD_ROLE_NAME = "staff lead"
 
 def is_admin():
     async def predicate(ctx):
-        return any(role.name.lower() == ADMIN_ROLE_NAME for role in ctx.author.roles)
+        return any((role.name.lower() == ADMIN_ROLE_NAME or role.name.lower() == LEAD_ROLE_NAME) for role in ctx.author.roles)
     return commands.check(predicate)
 
 class CheckInCommands(commands.Cog):
@@ -101,10 +102,12 @@ class CheckInCommands(commands.Cog):
 
     def sync_team_data(self):
         self.teamsMapped.clear()
-        data : list = self.manager.read_data("TeamContact!A1:C")
+        data : list = self.manager.read_data("TeamContact!A2:C")
         for row in data:
             self.teamsMapped[row[0].lower()] = {"discord":row[1], "bnet": row[2], "formalised_name": row[0]}
             self.teamsMapped_user[row[1]] = {"team_name":row[0], "bnet": row[2]}
+
+        print(self.teamsMapped)
 
     def get_team_from_user(self, username : str):
         if username not in self.teamsMapped_user: return "N/A"

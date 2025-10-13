@@ -37,34 +37,42 @@ class MyBot(commands.Bot):
 class SheetsManagement():
     def __init__(self):
         creds = None
+        self.ADMIN_SHEET = os.environ.get("ADMIN_SHEET")
 
-        self.ADMIN_SHEET = os.environ.get("ADMIN_SHEET");
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        TOKEN_PATH = os.path.join(BASE_DIR, "token.json")
+        CREDS_PATH = os.path.join(BASE_DIR, "credentials.json")
 
-        if os.path.exists("token.json"):
-            creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+        if os.path.exists(TOKEN_PATH):
+            creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
 
         if not creds or not creds.valid:
+            try:
+                if creds and creds.expired and creds.refresh_token:
+                    creds.refresh(Request())
+                else:
+                    raise ValueError("Invalid or missing refresh token")
+            except ValueError:
+                print("[SheetsManagement] Token invalid — regenerating...")
 
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-                CREDS_DIR = os.path.join(BASE_DIR, "credentials.json")
+                # Delete bad token and start new OAuth flow
+                if os.path.exists(TOKEN_PATH):
+                    os.remove(TOKEN_PATH)
 
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    CREDS_DIR, SCOPES
+                    CREDS_PATH, SCOPES
                 )
                 creds = flow.run_local_server(port=0)
 
-            with open("token.json", "w") as token:
-                token.write(creds.to_json())
+                with open(TOKEN_PATH, "w") as token:
+                    token.write(creds.to_json())
 
         try:
             self.service = build("sheets", "v4", credentials=creds)
             self.sheet = self.service.spreadsheets()
-
+            print("[SheetsManagement] Google Sheets API connected successfully.")
         except HttpError as err:
-            print(err)
+            print("[SheetsManagement] Google Sheets API error:", err)
 
     def write_data(self, data, query):
         body = {"values": data}
