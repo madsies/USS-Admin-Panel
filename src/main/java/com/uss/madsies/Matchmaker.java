@@ -17,6 +17,8 @@ public class Matchmaker {
 
         List<MatchUp> matchups = new ArrayList<>();
         List<TeamData> currentPool = new ArrayList<>();
+        TeamData downFloat = null;
+        TeamData possibleDownFloat = null;
         int poolSize = 0;
         int bracketWins = -1;
 
@@ -33,12 +35,24 @@ public class Matchmaker {
             }
             else
             {
-                TeamData downFloat = null;
+                if (downFloat != null)
+                {
+                    possibleDownFloat = currentPool.get(1);
+                }
+                else
+                {
+                    possibleDownFloat = currentPool.getFirst();
+                }
+
                 if (poolSize % 2 != 0)
                 {
-                    downFloat = currentPool.getLast();  // Downfloat team choice
-                    currentPool.removeLast();
+                    downFloat = possibleDownFloat;  // Downfloat team choice
+                    currentPool.remove(possibleDownFloat);
                     poolSize--;
+                }
+                else
+                {
+                    downFloat = null;
                 }
 
                 if (poolSize != 0)
