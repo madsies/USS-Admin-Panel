@@ -34,9 +34,18 @@ public class SeedingTools
     {
         data = sortByRank(data);
         float weightedScore = (float) Math.floor
-                (data.get(0)*2.0f + data.get(1) * 1.5f + data.get(2) * 1.25f + data.get(3)+data.get(4));
+                (data.get(0)*2.0f + data.get(1) * 1.5f + data.get(2) * 1.25f + data.get(3)+data.get(4)) / 6.75f;
 
-        return weightedScore / 6.75f;
+        float flatWeightedScore = (data.get(0) + data.get(1) + data.get(2) + data.get(3) + data.get(4)) / 5.0f;
+
+        if (flatWeightedScore >= 4000)
+        {
+            return flatWeightedScore;
+        }
+
+        if (weightedScore >= 4000) weightedScore = 3999;
+
+        return (float) Math.ceil(weightedScore);
     }
 
     /*
@@ -48,7 +57,7 @@ public class SeedingTools
      * @param team2 Team to compare to
      * @return If the left team should be higher seed
 
-
+     */
     public static boolean seedTiebreaker(List<Integer> team1, List<Integer> team2)
     {
         List<Integer> sortedTeam1 = sortByRank(team1);
@@ -61,7 +70,7 @@ public class SeedingTools
         }
         return true;
     }
-    */
+
 
 
     /**

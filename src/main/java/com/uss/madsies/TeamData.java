@@ -21,6 +21,7 @@ public class TeamData
     public int map_losses;
     public float omwp;
     List<String> history;
+    List<Integer> players = new ArrayList<>();
 
     /*
         Conversion from spreadsheet data to data class

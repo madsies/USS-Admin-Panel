@@ -380,17 +380,32 @@ public class Main {
                     .thenComparingDouble((TeamData t) -> t.seeding).reversed());
         }
         else {
-            teamsInfo.sort(Comparator.comparingDouble(o -> o.seeding));
-            teamsInfo = teamsInfo.reversed();
+            teamsInfo.sort(
+                    Comparator.comparingDouble((TeamData t) -> t.seeding)
+                            .reversed()
+                    .thenComparing((a,b) -> SeedingTools.seedTiebreaker(a.players, b.players) ? -1 : 1)
+                );
+
         }
     }
 
     public static void addSeedAndCreateTeams()
     {
         HashMap<String, Double> rankings = calculateSeedingRanks();
+
+        HashMap<String, List<Integer>> teamPlayers = new HashMap<>();
+        List<List<Object>> seedData = SheetsManagement.fetchData(ADMIN_SHEET, "Seeding!A1:G");
+
+        for (List<Object> row : seedData) {
+            if (row.isEmpty()) continue;
+            String name = row.getFirst().toString();
+            if (name.isEmpty()) continue;
+            teamPlayers.put(name, new ArrayList<>(row.subList(2, row.size()))
+                    .stream().map(o -> Integer.parseInt(o.toString())).collect(Collectors.toList()));
+        }
         for (Map.Entry<String, Double> entry : rankings.entrySet())
         {
-            teamsInfo.add(new TeamData(entry.getKey(), entry.getValue()));
+            teamsInfo.add(new TeamData(entry.getKey(), entry.getValue()){{players=teamPlayers.get(entry.getKey());}});
         }
 
         grantSeedingWins();
@@ -407,10 +422,12 @@ public class Main {
         rawRankings.add(new ArrayList<>());
         for (List<Object> row : seedData)
         {
+            if (row.isEmpty()) continue;
             String name = row.getFirst().toString();
             if (name.isEmpty()) continue;
             ArrayList<Integer> ranks = (ArrayList<Integer>) new ArrayList<>(row.subList(2, row.size()))
                     .stream().map(o -> Integer.parseInt(o.toString())).collect(Collectors.toList());
+
             double rating = SeedingTools.calculateWeightedSeed(ranks);
             rankings.put(name, rating);
             rawRankings.add(new ArrayList<>(Collections.singleton(rating)));
@@ -485,7 +502,5 @@ public class Main {
             System.out.println(e.getMessage());
         }
     }
-
-
-
+    
 }
