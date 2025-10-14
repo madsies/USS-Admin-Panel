@@ -35,6 +35,7 @@ public class Matchmaker {
             }
             else
             {
+                // Checks if previous pool had a downfloat, stops high teams cascading down to low games
                 if (downFloat != null)
                 {
                     possibleDownFloat = currentPool.get(1);

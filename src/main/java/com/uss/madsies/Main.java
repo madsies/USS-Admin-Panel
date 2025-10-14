@@ -363,7 +363,8 @@ public class Main {
         List<TeamData> data = new ArrayList<>();
         for (List<Object> row : sheetData)
         {
-            if (row.isEmpty()) return;
+            if (row.isEmpty()) continue;
+            if (row.getFirst().toString().isEmpty()) continue;
             data.add(new TeamData(row){{players=teamPlayers.get(row.getFirst());}});
         }
         teamsInfo = data;
