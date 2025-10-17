@@ -5,8 +5,8 @@ import java.util.List;
 
 public class SeedingTools
 {
-    public static final double HIGH_THRESHOLD_PERCENT = 15;
-    public static final double MID_THRESHOLD_PERCENT = 40;
+    public static final double HIGH_THRESHOLD_PERCENT = 20;
+    public static final double MID_THRESHOLD_PERCENT = 45;
     public static final double LOW_THRESHOLD_PERCENT = 70;
 
     /**
@@ -83,17 +83,25 @@ public class SeedingTools
     public static List<Integer> calcSeedingThresholds(int teamCount)
     {
         List<Integer> thresholds = calcSeedingThreshold_light(teamCount);
-        thresholds.add((int) Math.ceil(LOW_THRESHOLD_PERCENT /100 * teamCount));
-
+        thresholds.add(ceilToNextQuad(LOW_THRESHOLD_PERCENT / 100.0 * teamCount));
         return thresholds;
     }
 
     public static List<Integer> calcSeedingThreshold_light(int teamCount)
     {
         List<Integer> thresholds = new ArrayList<>();
-        thresholds.add((int) Math.ceil(HIGH_THRESHOLD_PERCENT /100 * teamCount));
-        thresholds.add((int) Math.ceil(MID_THRESHOLD_PERCENT /100 * teamCount));
+        thresholds.add(ceilToNextQuad(HIGH_THRESHOLD_PERCENT / 100.0 * teamCount));
+        thresholds.add(ceilToNextQuad(MID_THRESHOLD_PERCENT / 100.0 * teamCount));
         return thresholds;
+    }
+
+    /*
+        Ensures no overflow games for the top group for the first week at least, stops massive stomps
+     */
+    private static int ceilToNextQuad(double value)
+    {
+        int ceil = (int) Math.ceil(value);
+        return (ceil % 4 == 0) ? ceil : ceil + (4 - (ceil % 4));
     }
 
 

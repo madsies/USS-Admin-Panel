@@ -25,7 +25,6 @@ public class Matchmaker {
         for (TeamData team : teamData)
         {
             if (!team.checkedIn) continue;
-            System.out.println(poolSize);
             if (bracketWins == -1) bracketWins = team.wins;
 
             if (bracketWins == team.wins)

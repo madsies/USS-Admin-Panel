@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.io.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.List;
@@ -50,7 +52,7 @@ public class Main {
         List<List<Object>> values = new ArrayList<>();
 
         // Headers for sheet (Readability)
-        values.add(Arrays.asList("Team A", "Team B", "Team A Score", "Team B Score"));
+        values.add(Arrays.asList("Team A", "Team B", "Team A Score", "Team B Score", "Team A Seed", "Team B Seed"));
 
         // Data
         for(MatchUp match : matches)
@@ -61,7 +63,7 @@ public class Main {
             if (match.team1.teamName.equals("BYE")) scoreB = 2;
             if (match.team2.teamName.equals("BYE")) scoreA = 2;
 
-            values.add(Arrays.asList(match.team1.teamName, match.team2.teamName, scoreA, scoreB));
+            values.add(Arrays.asList(match.team1.teamName, match.team2.teamName, scoreA, scoreB, match.team1.seedingRank, match.team2.seedingRank));
         }
 
         SheetsManagement.writeData(values, ADMIN_SHEET, range);
@@ -337,7 +339,8 @@ public class Main {
                 count++;
             }
 
-            team.omwp = (float) ((count == 0) ? 0 : sum / count);
+            team.omwp = BigDecimal.valueOf((count == 0) ? 0 : sum / count).setScale(4, RoundingMode.HALF_UP).doubleValue();
+
         }
     }
 
@@ -368,6 +371,10 @@ public class Main {
             data.add(new TeamData(row){{players=teamPlayers.get(row.getFirst());}});
         }
         teamsInfo = data;
+
+        // Janky Seeding fix -- Sorts by seed, grabs the order, sorts by score
+        sortTeams(true);
+        sortTeams(false);
     }
 
     public static void sortTeams(boolean seeding)
@@ -390,6 +397,12 @@ public class Main {
                             .reversed()
                     .thenComparing((a,b) -> SeedingTools.seedTiebreaker(a.players, b.players) ? -1 : 1)
                 );
+
+            int rank = 1;
+            for (TeamData team : teamsInfo)
+            {
+                team.seedingRank = rank++;
+            }
 
         }
     }
@@ -467,10 +480,16 @@ public class Main {
             if (count <= thresholds.get(1))
             {
                 t.addWins(2);
+                t.losses += 1;
                 continue;
             }
             if (count <= thresholds.get(2)) {
                 t.addWins(1);
+                t.losses += 2;
+            }
+            if (count > thresholds.get(2))
+            {
+                t.losses += 3;
             }
         }
     }

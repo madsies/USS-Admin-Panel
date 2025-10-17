@@ -60,7 +60,13 @@ class CheckInCommands(commands.Cog):
         if team.lower() not in self.teamsMapped:
             message = f"Could not find team {team}"
         else:
-            message = f"**{self.teamsMapped[team.lower()]['formalised_name']}**\nCaptain's Btag: {self.teamsMapped[team.lower()]['bnet']}\nCaptain's Discord: {self.teamsMapped[team.lower()]['discord']}"
+            message = f"""**{self.teamsMapped[team.lower()]['formalised_name']}**\nCaptain's Discord: {self.teamsMapped[team.lower()]['discord']}\n Captain's Btag: {self.teamsMapped[team.lower()]['bnet']}\n
+            **Other Players:**
+            {self.teamsMapped[team.lower()]['bnet2']}
+            {self.teamsMapped[team.lower()]['bnet3']}
+            {self.teamsMapped[team.lower()]['bnet4']}
+            {self.teamsMapped[team.lower()]['bnet5']}
+            """
         embed = discord.Embed(title="USS Checkin", description=message, colour=USS_COLOUR)
         embed.set_thumbnail(url="https://pbs.twimg.com/profile_images/1969783689090363392/v_27TFgp_400x400.jpg")
         await ctx.reply(embed=embed)
@@ -102,10 +108,10 @@ class CheckInCommands(commands.Cog):
 
     def sync_team_data(self):
         self.teamsMapped.clear()
-        data : list = self.manager.read_data("TeamContact!A2:C")
+        data : list = self.manager.read_data("TeamContact!A2:G")
         for row in data:
-            self.teamsMapped[row[0].lower()] = {"discord":row[1], "bnet": row[2], "formalised_name": row[0]}
-            self.teamsMapped_user[row[1]] = {"team_name":row[0], "bnet": row[2]}
+            self.teamsMapped[row[0].lower()] = {"discord":row[1], "bnet": row[2], "bnet2": row[3], "bnet3": row[4], "bnet4": row[5], "bnet5": row[6], "formalised_name": row[0]}
+            self.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "bnet": row[2], "bnet2": row[3], "bnet3": row[4], "bnet4": row[5], "bnet5": row[6]}
 
         print(self.teamsMapped)
 
@@ -136,7 +142,7 @@ class CheckInCommands(commands.Cog):
             i = i+1
 
     def check_in_sheet(self, username:str):
-        return self.find_and_flip_checkin(self.get_team_from_user(username),True)
+        return self.find_and_flip_checkin(self.get_team_from_user(username.lower()),True)
     
     def check_out_sheet(self, username:str):
         return self.find_and_flip_checkin(self.get_team_from_user(username),False)

@@ -19,9 +19,10 @@ public class TeamData
     public int losses;
     public int map_wins;
     public int map_losses;
-    public float omwp;
+    public double omwp;
     List<String> history;
     List<Integer> players = new ArrayList<>();
+    public int seedingRank = 999;
 
     /*
         Conversion from spreadsheet data to data class
@@ -37,7 +38,7 @@ public class TeamData
         losses = Integer.parseInt((String)spreadsheetRow.get(5));
         map_wins = Integer.parseInt((String)spreadsheetRow.get(6));
         map_losses = Integer.parseInt((String)spreadsheetRow.get(7));
-        omwp = Float.parseFloat((String)spreadsheetRow.get(8));
+        omwp = Double.parseDouble((String)spreadsheetRow.get(8));
         history = new ArrayList<>();
         for(int i = 9; i < spreadsheetRow.size(); i++)
         {
