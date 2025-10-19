@@ -5,9 +5,9 @@ import java.util.List;
 
 public class SeedingTools
 {
-    public static final double HIGH_THRESHOLD_PERCENT = 20;
-    public static final double MID_THRESHOLD_PERCENT = 45;
-    public static final double LOW_THRESHOLD_PERCENT = 70;
+    public static final double HIGH_THRESHOLD_PERCENT = 25;
+    public static final double MID_THRESHOLD_PERCENT = 50;
+    public static final double LOW_THRESHOLD_PERCENT = 75;
 
     /**
      *  Sorts Team rankings with highest rank first
@@ -58,17 +58,17 @@ public class SeedingTools
      * @return If the left team should be higher seed
 
      */
-    public static boolean seedTiebreaker(List<Integer> team1, List<Integer> team2)
+    public static int seedTiebreaker(List<Integer> team1, List<Integer> team2)
     {
         List<Integer> sortedTeam1 = sortByRank(team1);
         List<Integer> sortedTeam2 = sortByRank(team2);
 
         for (int idx = 0; idx < sortedTeam1.size(); idx++)
         {
-            if (sortedTeam1.get(idx) > sortedTeam2.get(idx)) return true;
-            if (sortedTeam2.get(idx) > sortedTeam1.get(idx)) return false;
+            if (sortedTeam1.get(idx) > sortedTeam2.get(idx)) return -1;
+            if (sortedTeam2.get(idx) > sortedTeam1.get(idx)) return 1;
         }
-        return true;
+        return 0;
     }
 
 

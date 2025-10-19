@@ -180,8 +180,9 @@ public class Main {
         {
             throw new RuntimeException("Round was not running..");
         }
+
         updateRecords();
-        updateHistory(matches);
+        updateHistory(matches, SheetsManagement.getSheetNumber());
         updateOMWP();
         sortTeams(false);
         rewriteData();
@@ -268,11 +269,11 @@ public class Main {
         SheetsManagement.writeData(sheetData, ADMIN_SHEET, "Datasheet!A2:Y");
     }
 
-    public static void updateHistory(List<MatchUp> matches)
+    public static void updateHistory(List<MatchUp> matches, int round)
     {
         for (MatchUp m : matches) {
-            addOpponent(m.team1.teamName, m.team2.teamName);
-            addOpponent(m.team2.teamName, m.team1.teamName);
+            addOpponent(m.team1.teamName, m.team2.teamName, round);
+            addOpponent(m.team2.teamName, m.team1.teamName, round);
         }
     }
 
@@ -297,14 +298,15 @@ public class Main {
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
     }
 
-    private static void addOpponent( String team, String opponent)
+    private static void addOpponent( String team, String opponent, int round)
     {
         for (TeamData t : teamsInfo)
         {
             String teamName = t.teamName;
             if (teamName.equals(team))
             {
-                t.history.add(opponent);
+                //t.history.(opponent);
+                t.history.set(round - 1, opponent);
                 return;
             }
         }
@@ -395,7 +397,8 @@ public class Main {
             teamsInfo.sort(
                     Comparator.comparingDouble((TeamData t) -> t.seeding)
                             .reversed()
-                    .thenComparing((a,b) -> SeedingTools.seedTiebreaker(a.players, b.players) ? -1 : 1)
+                    .thenComparing((a,b) -> SeedingTools.seedTiebreaker(a.players, b.players))
+                            .thenComparing((t) -> t.teamName.toLowerCase())
                 );
 
             int rank = 1;
@@ -465,7 +468,7 @@ public class Main {
 
     public static void grantSeedingWins()
     {
-        List<Integer> thresholds = SeedingTools.calcSeedingThresholds(teamsInfo.size());
+        List<Integer> thresholds = List.of(24, 48, 72);//SeedingTools.calcSeedingThresholds(teamsInfo.size());
 
         sortTeams(true);
         int count = 0;

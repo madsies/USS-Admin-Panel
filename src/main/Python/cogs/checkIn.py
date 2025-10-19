@@ -60,8 +60,9 @@ class CheckInCommands(commands.Cog):
         if team.lower() not in self.teamsMapped:
             message = f"Could not find team {team}"
         else:
-            message = f"""**{self.teamsMapped[team.lower()]['formalised_name']}**\nCaptain's Discord: {self.teamsMapped[team.lower()]['discord']}\n Captain's Btag: {self.teamsMapped[team.lower()]['bnet']}\n
-            **Other Players:**
+            message = f"""**{self.teamsMapped[team.lower()]['formalised_name']}**\nCaptain's Discord: {self.teamsMapped[team.lower()]['discord']}\n
+            **Players:**
+            {self.teamsMapped[team.lower()]['bnet']}
             {self.teamsMapped[team.lower()]['bnet2']}
             {self.teamsMapped[team.lower()]['bnet3']}
             {self.teamsMapped[team.lower()]['bnet4']}
@@ -132,9 +133,9 @@ class CheckInCommands(commands.Cog):
                     self.manager.write_data([[checkin]], f"Datasheet!C{i}")
                     return f"Checked in {teamName}"
                 elif checkin and flag:
-                    return f"{teamName} is already checked in."
+                    return f"{teamName} are already checked in."
                 elif not checkin and not flag:
-                    return f"{teamName} is already checked out."
+                    return f"{teamName} are already checked out."
                 else:
                     self.manager.write_data([[checkin]], f"Datasheet!C{i}")
                     return f"Checked out {teamName}"

@@ -1,6 +1,7 @@
 package com.uss.madsies;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /*
@@ -20,7 +21,7 @@ public class TeamData
     public int map_wins;
     public int map_losses;
     public double omwp;
-    List<String> history;
+    List<String> history = new ArrayList<>(Arrays.asList("", "", "", "", "", "", "", ""));
     List<Integer> players = new ArrayList<>();
     public int seedingRank = 999;
 
@@ -39,10 +40,10 @@ public class TeamData
         map_wins = Integer.parseInt((String)spreadsheetRow.get(6));
         map_losses = Integer.parseInt((String)spreadsheetRow.get(7));
         omwp = Double.parseDouble((String)spreadsheetRow.get(8));
-        history = new ArrayList<>();
+        history = new ArrayList<>(Arrays.asList("", "", "", "", "", "", "", ""));
         for(int i = 9; i < spreadsheetRow.size(); i++)
         {
-            history.add((String) spreadsheetRow.get(i));
+            history.set(i-9, (String) spreadsheetRow.get(i));
         }
     }
 
@@ -61,7 +62,7 @@ public class TeamData
         map_wins = 0;
         map_losses = 0;
         omwp = 0;
-        history = new ArrayList<>();
+        history = new ArrayList<>(Arrays.asList("", "", "", "", "", "", "", ""));
     }
     /*
         For testing
@@ -77,7 +78,7 @@ public class TeamData
         map_wins = 0;
         map_losses = 0;
         omwp = 0;
-        history = new ArrayList<>();
+        history = new ArrayList<>(Arrays.asList("", "", "", "", "", "", "", ""));
     }
 
     public List<Object> convertToSpreadsheetRow()
@@ -109,7 +110,7 @@ public class TeamData
         map_wins = 0;
         map_losses = 0;
         omwp = 0;
-        history = new ArrayList<>();
+        history = new ArrayList<>(Arrays.asList("", "", "", "", "", "", "", ""));
     }
 
     public void addWins(int count)
@@ -126,6 +127,10 @@ public class TeamData
     public String getName()
     {
         return teamName;
+    }
+
+    public boolean hasPlayed(TeamData opponent) {
+        return this.history.contains(opponent.teamName);
     }
 
  }
