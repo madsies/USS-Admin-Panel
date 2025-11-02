@@ -138,6 +138,7 @@ public class Main {
 
     public static void fixStandings() throws IOException
     {
+        updateOMWP();
         sortTeams(false);
         rewriteData();
     }
@@ -315,10 +316,22 @@ public class Main {
     public static void updateOMWP() {
 
         Map<String, int[]> teamRecords = new HashMap<>();
+        int roundNumber;
+        try
+        {
+            roundNumber = SheetsManagement.getSheetNumber();
+        }
+        catch (IOException e)
+        {
+            roundNumber = 0;
+        }
+
+
         for (TeamData team : teamsInfo)
         {
             teamRecords.put(team.teamName, new int[]{team.wins, team.losses});
         }
+
 
         for (TeamData team : teamsInfo)
         {
@@ -333,13 +346,16 @@ public class Main {
                 int oppWins = rec[0];
                 int oppLosses = rec[1];
 
+
                 int totalGames = oppWins + oppLosses;
-                if (totalGames == 0) continue;
+                if (totalGames == 0 || totalGames < roundNumber+1) continue;
 
                 double winPct = (double) oppWins / totalGames;
                 sum += winPct;
                 count++;
             }
+
+
 
             team.omwp = BigDecimal.valueOf((count == 0) ? 0 : sum / count).setScale(4, RoundingMode.HALF_UP).doubleValue();
 

@@ -74,7 +74,7 @@ public class matchmakingTest
         List<MatchUp> games = Matchmaker.createSwissMatchups(teams);
 
         assertEquals(3, games.size());
-        assertEquals("BYE", games.getFirst().team2.getName()); // Checking position of Bye
+        assertEquals("BYE", games.getLast().team2.getName()); // Checking position of Bye
     }
 
     @Test
@@ -99,7 +99,7 @@ public class matchmakingTest
         teams.get(2).wins = 2;
 
         List<MatchUp> games = Matchmaker.createSwissMatchups(teams);
-        assertEquals(games.get(1).team1, teams.get(2)); // Checking if last place gets dropped a bucket
+        assertEquals(games.get(1).team1, teams.get(0)); // Checking if last place gets dropped a bucket
         assertEquals(4, games.size()); // Make sure all games are played still
     }
 
